@@ -1,0 +1,21 @@
+# Strict analyzer/lint configuration based on very_good_analysis
+# (a stricter superset of package:flutter_lints).
+include: package:very_good_analysis/analysis_options.yaml
+
+analyzer:
+  exclude:
+    - build/**
+    - android/**
+    - ios/**
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    - "**/*.gr.dart"
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+
+linter:
+  rules:
+    # Generated barrel/index files are intentionally empty for now.
+    public_member_api_docs: false
