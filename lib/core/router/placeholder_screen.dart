@@ -4,7 +4,11 @@ import 'package:flutter/material.dart';
 /// screen name (and any route path parameters) so routing can be exercised
 /// end-to-end before real screens exist.
 class PlaceholderScreen extends StatelessWidget {
-  const PlaceholderScreen({required this.title, super.key, this.pathParameters = const {}});
+  const PlaceholderScreen({
+    required this.title,
+    super.key,
+    this.pathParameters = const {},
+  });
 
   final String title;
   final Map<String, String> pathParameters;
@@ -22,7 +26,9 @@ class PlaceholderScreen extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(top: 8),
                 child: Text(
-                  pathParameters.entries.map((e) => '${e.key}: ${e.value}').join(', '),
+                  pathParameters.entries
+                      .map((e) => '${e.key}: ${e.value}')
+                      .join(', '),
                 ),
               ),
           ],

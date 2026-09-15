@@ -26,30 +26,36 @@ void main() {
       DioExceptionType.sendTimeout,
     ]) {
       test('maps $type to NetworkFailure', () {
-        final exception = DioException(requestOptions: _requestOptions(), type: type);
+        final exception = DioException(
+          requestOptions: _requestOptions(),
+          type: type,
+        );
         expect(ErrorMapper.map(exception), const Failure.network());
       });
     }
 
-    test('maps 400 to ValidationFailure with fields from the response body', () {
-      final failure = ErrorMapper.map(
-        _withResponse(
-          400,
-          data: {
-            'errors': {
-              'email': ['is invalid'],
+    test(
+      'maps 400 to ValidationFailure with fields from the response body',
+      () {
+        final failure = ErrorMapper.map(
+          _withResponse(
+            400,
+            data: {
+              'errors': {
+                'email': ['is invalid'],
+              },
             },
-          },
-        ),
-      );
+          ),
+        );
 
-      expect(
-        failure,
-        Failure.validation({
-          'email': ['is invalid'],
-        }),
-      );
-    });
+        expect(
+          failure,
+          Failure.validation({
+            'email': ['is invalid'],
+          }),
+        );
+      },
+    );
 
     test('maps 422 to ValidationFailure with fields from a flat body', () {
       final failure = ErrorMapper.map(

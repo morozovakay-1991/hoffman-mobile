@@ -7,11 +7,17 @@ import 'package:hoffman/core/network/token_storage.dart';
 /// Builds the app-wide [Dio] client: base URL resolution, bearer-token
 /// injection and debug-only logging.
 class DioClient {
-  DioClient({required void Function() onLogout, TokenStorage? tokenStorage, Dio? dio})
-    : _dio = dio ?? Dio() {
+  DioClient({
+    required void Function() onLogout,
+    TokenStorage? tokenStorage,
+    Dio? dio,
+  }) : _dio = dio ?? Dio() {
     _dio.options.baseUrl = ApiBaseUrl.resolve();
     _dio.interceptors.addAll([
-      AuthInterceptor(tokenStorage: tokenStorage ?? SecureTokenStorage(), logout: onLogout),
+      AuthInterceptor(
+        tokenStorage: tokenStorage ?? SecureTokenStorage(),
+        logout: onLogout,
+      ),
       LoggingInterceptor(),
     ]);
   }

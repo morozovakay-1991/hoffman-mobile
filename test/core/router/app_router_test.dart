@@ -57,16 +57,17 @@ void main() {
     expect(find.text('id: abc-123'), findsOneWidget);
   });
 
-  testWidgets('authGuard (wired as the top-level redirect) lets navigation through unchanged', (
-    tester,
-  ) async {
-    final router = createAppRouter();
-    addTearDown(router.dispose);
+  testWidgets(
+    'authGuard (wired as the top-level redirect) lets navigation through unchanged',
+    (tester) async {
+      final router = createAppRouter();
+      addTearDown(router.dispose);
 
-    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
-    router.go('/profile');
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+      router.go('/profile');
+      await tester.pumpAndSettle();
 
-    expect(router.routerDelegate.currentConfiguration.uri.path, '/profile');
-  });
+      expect(router.routerDelegate.currentConfiguration.uri.path, '/profile');
+    },
+  );
 }

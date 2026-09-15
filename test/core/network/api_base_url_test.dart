@@ -12,7 +12,10 @@ void main() {
     });
 
     test('defaults to localhost for iOS when no dart-define is set', () {
-      expect(ApiBaseUrl.resolve(platform: TargetPlatform.iOS), 'http://localhost:8000');
+      expect(
+        ApiBaseUrl.resolve(platform: TargetPlatform.iOS),
+        'http://localhost:8000',
+      );
     });
   });
 }

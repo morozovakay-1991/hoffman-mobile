@@ -14,7 +14,8 @@ sealed class Failure with _$Failure {
 
   /// The backend rejected the request as invalid (400/422). [fields] maps
   /// each invalid field name to its list of validation messages.
-  const factory Failure.validation(Map<String, List<String>> fields) = ValidationFailure;
+  const factory Failure.validation(Map<String, List<String>> fields) =
+      ValidationFailure;
 
   /// The backend responded 401 — the session is missing or expired.
   const factory Failure.unauthorized() = UnauthorizedFailure;

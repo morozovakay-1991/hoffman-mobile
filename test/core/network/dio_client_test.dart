@@ -44,7 +44,9 @@ Dio _buildDio({
 }) {
   final dio = Dio(BaseOptions(baseUrl: 'https://api.example.com'))
     ..httpClientAdapter = _FakeHttpClientAdapter(statusCode)
-    ..interceptors.add(AuthInterceptor(tokenStorage: tokenStorage, logout: logout));
+    ..interceptors.add(
+      AuthInterceptor(tokenStorage: tokenStorage, logout: logout),
+    );
   return dio;
 }
 
@@ -56,36 +58,53 @@ void main() {
   });
 
   group('AuthInterceptor', () {
-    test('attaches the Bearer token from TokenStorage to outgoing requests', () async {
-      when(tokenStorage.readAccessToken).thenAnswer((_) async => 'abc123');
-      var logoutCalled = false;
+    test(
+      'attaches the Bearer token from TokenStorage to outgoing requests',
+      () async {
+        when(tokenStorage.readAccessToken).thenAnswer((_) async => 'abc123');
+        var logoutCalled = false;
 
-      final dio = _buildDio(
-        tokenStorage: tokenStorage,
-        logout: () => logoutCalled = true,
-        statusCode: 200,
-      );
+        final dio = _buildDio(
+          tokenStorage: tokenStorage,
+          logout: () => logoutCalled = true,
+          statusCode: 200,
+        );
 
-      await dio.get<void>('/ping');
+        await dio.get<void>('/ping');
 
-      final adapter = dio.httpClientAdapter as _FakeHttpClientAdapter;
-      expect(adapter.lastRequestOptions?.headers['Authorization'], 'Bearer abc123');
-      expect(logoutCalled, isFalse);
-    });
+        final adapter = dio.httpClientAdapter as _FakeHttpClientAdapter;
+        expect(
+          adapter.lastRequestOptions?.headers['Authorization'],
+          'Bearer abc123',
+        );
+        expect(logoutCalled, isFalse);
+      },
+    );
 
-    test('sends no Authorization header when there is no stored token', () async {
-      when(tokenStorage.readAccessToken).thenAnswer((_) async => null);
+    test(
+      'sends no Authorization header when there is no stored token',
+      () async {
+        when(tokenStorage.readAccessToken).thenAnswer((_) async => null);
 
-      final dio = _buildDio(tokenStorage: tokenStorage, logout: () {}, statusCode: 200);
+        final dio = _buildDio(
+          tokenStorage: tokenStorage,
+          logout: () {},
+          statusCode: 200,
+        );
 
-      await dio.get<void>('/ping');
+        await dio.get<void>('/ping');
 
-      final adapter = dio.httpClientAdapter as _FakeHttpClientAdapter;
-      expect(adapter.lastRequestOptions?.headers.containsKey('Authorization'), isFalse);
-    });
+        final adapter = dio.httpClientAdapter as _FakeHttpClientAdapter;
+        expect(
+          adapter.lastRequestOptions?.headers.containsKey('Authorization'),
+          isFalse,
+        );
+      },
+    );
 
     test('invokes the logout callback on a 401 response', () async {
-      when(tokenStorage.readAccessToken).thenAnswer((_) async => 'expired-token');
+      when(tokenStorage.readAccessToken)
+          .thenAnswer((_) async => 'expired-token');
       var logoutCalled = false;
 
       final dio = _buildDio(

@@ -16,7 +16,8 @@ abstract final class ApiBaseUrl {
   // staging-сборки и физические устройства обязаны передавать
   // --dart-define=API_BASE_URL=<url> при сборке — локальные дефолты ниже
   // (10.0.2.2 / localhost) с них недостижимы.
-  static const String _stagingPlaceholder = 'https://staging.hoffman.example.com';
+  static const String _stagingPlaceholder =
+      'https://staging.hoffman.example.com';
 
   /// Returns the resolved base URL. [platform] is exposed only for testing;
   /// production code should call this with no arguments.
