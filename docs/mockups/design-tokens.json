@@ -1,47 +1,52 @@
 {
   "meta": {
-    "status": "placeholder",
-    "todo": "TODO(figma): заменить на реальные значения из макета, как только будет доступен доступ к Figma MCP.",
-    "note": "Временный набор токенов (нейтральная монохромная палитра + шрифт Inter), созданный, чтобы не блокировать разработку core/theme. Не является источником правды дизайна."
+    "status": "figma",
+    "source": "https://www.figma.com/design/kHVwZWaDGDSPQDagEkipJ5/App-for-dev?node-id=1-81",
+    "note": "Цвета и типографика — реальные значения из Figma (раздел Colors & Fonts, текстовые стили headlineLarge/titleLarge/labelMedium/bodySmall). Spacing и radius — шкала, заведённая как переменные в Figma и привязанная к образцам кнопки/бейджа. Стили типографики, помеченные source:\"material-default\", в макете ещё не встречаются — стандартные значения Material, скорректировать при появлении соответствующих экранов."
   },
   "colors": {
-    "black": "#000000",
-    "white": "#FFFFFF",
-    "grey100": "#F5F5F5",
-    "grey300": "#E0E0E0",
-    "grey500": "#9E9E9E",
-    "grey700": "#616161",
-    "grey900": "#212121"
+    "basicBlack": "#000000",
+    "softBlack": "rgba(0,0,0,0.7)",
+    "grey": "rgba(0,0,0,0.2)",
+    "blueTint": "#ABC5DD",
+    "lightBlueTint": "#E3F0F9",
+    "cherryRed": "#921D19",
+    "fireRed": "#FF363A",
+    "background": "#FFFFFF"
   },
   "typography": {
-    "fontFamily": "Inter",
+    "fontFamily": "Golos Text",
     "styles": {
-      "displayLarge": { "fontSize": 40, "fontWeight": 700, "height": 1.2 },
-      "displayMedium": { "fontSize": 34, "fontWeight": 700, "height": 1.2 },
-      "displaySmall": { "fontSize": 28, "fontWeight": 700, "height": 1.25 },
-      "headlineLarge": { "fontSize": 26, "fontWeight": 700, "height": 1.25 },
-      "headlineMedium": { "fontSize": 24, "fontWeight": 600, "height": 1.3 },
-      "headlineSmall": { "fontSize": 22, "fontWeight": 600, "height": 1.3 },
-      "titleLarge": { "fontSize": 20, "fontWeight": 600, "height": 1.3 },
-      "titleMedium": { "fontSize": 18, "fontWeight": 600, "height": 1.35 },
-      "titleSmall": { "fontSize": 16, "fontWeight": 600, "height": 1.4 },
-      "bodyLarge": { "fontSize": 16, "fontWeight": 400, "height": 1.5 },
-      "bodyMedium": { "fontSize": 14, "fontWeight": 400, "height": 1.5 },
-      "bodySmall": { "fontSize": 12, "fontWeight": 400, "height": 1.5 },
-      "labelLarge": { "fontSize": 14, "fontWeight": 500, "height": 1.3 },
-      "labelMedium": { "fontSize": 12, "fontWeight": 500, "height": 1.3 },
-      "labelSmall": { "fontSize": 11, "fontWeight": 500, "height": 1.3 }
+      "displayLarge":   { "fontSize": 57, "fontWeight": 400, "height": 1.15, "source": "material-default" },
+      "displayMedium":  { "fontSize": 45, "fontWeight": 400, "height": 1.15, "source": "material-default" },
+      "displaySmall":   { "fontSize": 36, "fontWeight": 400, "height": 1.15, "source": "material-default" },
+      "headlineLarge":  { "fontSize": 32, "fontWeight": 400, "height": 1.15, "source": "figma" },
+      "headlineMedium": { "fontSize": 28, "fontWeight": 400, "height": 1.15, "source": "material-default" },
+      "headlineSmall":  { "fontSize": 24, "fontWeight": 400, "height": 1.15, "source": "material-default" },
+      "titleLarge":     { "fontSize": 20, "fontWeight": 400, "height": 1.15, "source": "figma" },
+      "titleMedium":    { "fontSize": 16, "fontWeight": 500, "height": 1.15, "source": "material-default" },
+      "titleSmall":     { "fontSize": 14, "fontWeight": 500, "height": 1.15, "source": "material-default" },
+      "bodyLarge":      { "fontSize": 16, "fontWeight": 400, "height": 1.15, "source": "material-default" },
+      "bodyMedium":     { "fontSize": 14, "fontWeight": 400, "height": 1.15, "source": "material-default" },
+      "bodySmall":      { "fontSize": 12, "fontWeight": 400, "height": 1.15, "source": "figma" },
+      "labelLarge":     { "fontSize": 14, "fontWeight": 500, "height": 1.15, "source": "material-default" },
+      "labelMedium":    { "fontSize": 12, "fontWeight": 500, "height": 1.15, "source": "figma" },
+      "labelSmall":     { "fontSize": 11, "fontWeight": 500, "height": 1.15, "source": "material-default" }
     }
   },
   "spacing": {
+    "xxs": 2,
     "xs": 4,
     "sm": 8,
     "md": 16,
-    "lg": 24
+    "lg": 24,
+    "xl": 32
   },
   "radius": {
+    "xs": 4,
     "sm": 8,
-    "md": 12,
-    "lg": 16
+    "md": 10,
+    "lg": 16,
+    "full": 999
   }
 }
