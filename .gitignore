@@ -46,3 +46,7 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# Golden test diff artifacts (flutter_test writes them next to failing goldens)
+**/failures/*.png
+**/xcshareddata/swiftpm/Package.resolved

@@ -30,11 +30,23 @@ abstract final class AppTypography {
     return GoogleFonts.golosTextTextTheme(base);
   }
 
+  /// [style] in Golos Text at [weight], using that weight's real font file.
+  /// `copyWith(fontWeight: ...)` on a theme style would only synthesize the
+  /// weight, since google_fonts pins one file per style (e.g. the Figma
+  /// `Text/Link` SemiBold 600).
+  static TextStyle withWeight(TextStyle? style, FontWeight weight) {
+    return GoogleFonts.golosText(textStyle: style, fontWeight: weight);
+  }
+
   static TextStyle _style(double fontSize, FontWeight weight, Color color) {
     return TextStyle(
       fontSize: fontSize,
       fontWeight: weight,
       height: _height,
+      // Figma text styles have 0 tracking. Must be explicit: MaterialApp
+      // merges the M3 `englishLike` geometry (0.1–0.5 letterSpacing) into
+      // any style that leaves it null.
+      letterSpacing: 0,
       color: color,
     );
   }

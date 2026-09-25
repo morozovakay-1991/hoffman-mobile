@@ -83,6 +83,15 @@ class WidgetsShowcaseScreen extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.md),
           const AppTextField(label: 'Пароль', isRequired: true, enabled: false),
+          const SizedBox(height: AppSpacing.md),
+          const AppTextField(
+            label: 'Email',
+            isRequired: true,
+            hintText: 'example@gmail.com',
+            fillColor: AppColors.lightBlueTint,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          const AppTextField(hintText: '___   ___   ___   ___   ___   ___'),
           const _Section('AppBadge'),
           Wrap(
             spacing: AppSpacing.sm,

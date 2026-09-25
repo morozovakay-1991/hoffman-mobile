@@ -4,6 +4,10 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 /// unit-tested without touching platform channels.
 abstract class TokenStorage {
   Future<String?> readAccessToken();
+
+  Future<void> writeAccessToken(String token);
+
+  Future<void> deleteAccessToken();
 }
 
 /// [TokenStorage] backed by `flutter_secure_storage`.
@@ -17,4 +21,11 @@ class SecureTokenStorage implements TokenStorage {
 
   @override
   Future<String?> readAccessToken() => _storage.read(key: accessTokenKey);
+
+  @override
+  Future<void> writeAccessToken(String token) =>
+      _storage.write(key: accessTokenKey, value: token);
+
+  @override
+  Future<void> deleteAccessToken() => _storage.delete(key: accessTokenKey);
 }

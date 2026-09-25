@@ -75,6 +75,30 @@ void main() {
       );
     });
 
+    test('maps 422 with the hoffman-backend {error: {fields}} envelope', () {
+      final failure = ErrorMapper.map(
+        _withResponse(
+          422,
+          data: {
+            'error': {
+              'code': 'VALIDATION_ERROR',
+              'message': 'The given data was invalid.',
+              'fields': {
+                'email': ['The email has already been taken.'],
+              },
+            },
+          },
+        ),
+      );
+
+      expect(
+        failure,
+        const Failure.validation({
+          'email': ['The email has already been taken.'],
+        }),
+      );
+    });
+
     test('maps 401 to UnauthorizedFailure', () {
       expect(ErrorMapper.map(_withResponse(401)), const Failure.unauthorized());
     });

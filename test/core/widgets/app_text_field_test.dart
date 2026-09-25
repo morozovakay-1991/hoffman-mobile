@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hoffman/core/theme/index.dart';
 import 'package:hoffman/core/widgets/index.dart';
@@ -183,5 +184,50 @@ void main() {
     expect(field.keyboardType, TextInputType.visiblePassword);
     expect(field.obscureText, isTrue);
     expect(field.enabled, isFalse);
+  });
+
+  testWidgets('fillColor overrides the blueTint fill', (tester) async {
+    await pumpThemed(
+      tester,
+      const AppTextField(label: 'Email', fillColor: AppColors.lightBlueTint),
+      width: 361,
+    );
+
+    expect(_decorationOf(tester).fillColor, AppColors.lightBlueTint);
+  });
+
+  testWidgets('hintText is shown in softBlack while empty', (tester) async {
+    await pumpThemed(
+      tester,
+      const AppTextField(label: 'Email', hintText: 'example@gmail.com'),
+      width: 361,
+    );
+
+    final decoration = _decorationOf(tester);
+    expect(decoration.hintText, 'example@gmail.com');
+    expect(decoration.hintStyle?.color, AppColors.softBlack);
+    expect(find.text('example@gmail.com'), findsOneWidget);
+  });
+
+  testWidgets('without a label only the input box is laid out', (tester) async {
+    await pumpThemed(tester, const AppTextField(), width: 361);
+
+    expect(find.byType(TextField), findsOneWidget);
+    expect(find.text('*'), findsNothing);
+  });
+
+  testWidgets('inputFormatters are applied', (tester) async {
+    await pumpThemed(
+      tester,
+      AppTextField(
+        label: 'Код',
+        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+      ),
+      width: 361,
+    );
+
+    await tester.enterText(find.byType(TextField), '12a3');
+
+    expect(find.text('123'), findsOneWidget);
   });
 }
