@@ -42,7 +42,14 @@ abstract final class ErrorMapper {
     if (data is! Map) {
       return const {};
     }
-    final rawFields = data['errors'] is Map ? data['errors'] as Map : data;
+    // hoffman-backend wraps every error as {error: {code, message, fields}}.
+    final error = data['error'];
+    final Map<dynamic, dynamic> rawFields;
+    if (error is Map) {
+      rawFields = error['fields'] is Map ? error['fields'] as Map : const {};
+    } else {
+      rawFields = data['errors'] is Map ? data['errors'] as Map : data;
+    }
 
     final fields = <String, List<String>>{};
     for (final entry in rawFields.entries) {

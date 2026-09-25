@@ -12,7 +12,9 @@ env:
 jobs:
   mobile:
     name: Format, analyze & test
-    runs-on: ubuntu-latest
+    # Pinned: golden files are recorded on ubuntu:24.04 (linux/amd64), and
+    # a different OS image may shift glyph rendering.
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout code

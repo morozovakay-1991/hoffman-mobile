@@ -12,7 +12,11 @@ class DioClient {
     TokenStorage? tokenStorage,
     Dio? dio,
   }) : _dio = dio ?? Dio() {
-    _dio.options.baseUrl = ApiBaseUrl.resolve();
+    _dio.options
+      ..baseUrl = ApiBaseUrl.resolve()
+      ..connectTimeout = timeout
+      ..receiveTimeout = timeout
+      ..headers['Accept'] = 'application/json';
     _dio.interceptors.addAll([
       AuthInterceptor(
         tokenStorage: tokenStorage ?? SecureTokenStorage(),
@@ -21,6 +25,10 @@ class DioClient {
       LoggingInterceptor(),
     ]);
   }
+
+  /// Connect/receive timeout, so a dead network surfaces as a
+  /// `NetworkFailure` instead of an endless loader.
+  static const Duration timeout = Duration(seconds: 15);
 
   final Dio _dio;
 
