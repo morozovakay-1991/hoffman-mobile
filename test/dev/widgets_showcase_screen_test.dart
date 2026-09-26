@@ -71,4 +71,24 @@ void main() {
     await tester.pump();
     expect(find.byIcon(Icons.remove), findsOneWidget);
   });
+
+  testWidgets('showcase lists the LockedOverlay presets', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(theme: AppTheme.light, home: const WidgetsShowcaseScreen()),
+    );
+
+    for (final label in [
+      'Создать аккаунт',
+      'Восстановить доступ',
+      'Пройти верификацию',
+      LockedOverlayText.lockedDayTitle,
+    ]) {
+      await tester.scrollUntilVisible(
+        find.text(label),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(find.text(label), findsOneWidget);
+    }
+  });
 }

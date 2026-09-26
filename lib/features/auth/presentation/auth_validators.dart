@@ -10,6 +10,15 @@ abstract final class AuthErrorText {
   /// backend) follows the 139:5287 wording.
   static const String nameRequired = 'Заполните имя';
 
+  /// Not in the mockup: the graduate data form (139:5303) follows the
+  /// 139:5287 wording for its required fields.
+  static const String lastNameRequired = 'Заполните фамилию';
+  static const String phoneRequired = 'Заполните номер телефона';
+
+  /// Not in the mockup: the backend rejected a graduate data field that
+  /// passed the client checks (e.g. longer than it allows).
+  static const String checkField = 'Проверьте введенные данные';
+
   /// 139:5297, 139:5294.
   static const String emailInvalid = 'Неверный формат email';
 
@@ -105,6 +114,12 @@ abstract final class AuthValidators {
 
   static String? name(String value) =>
       value.trim().isEmpty ? AuthErrorText.nameRequired : null;
+
+  static String? lastName(String value) =>
+      value.trim().isEmpty ? AuthErrorText.lastNameRequired : null;
+
+  static String? phone(String value) =>
+      value.trim().isEmpty ? AuthErrorText.phoneRequired : null;
 
   static String? code(String value) =>
       _code.hasMatch(value) ? null : AuthErrorText.invalidCode;

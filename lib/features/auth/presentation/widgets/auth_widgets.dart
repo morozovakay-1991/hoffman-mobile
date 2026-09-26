@@ -63,6 +63,8 @@ class AuthHeading extends StatelessWidget {
     required this.subtitle,
     super.key,
     this.largeSubtitle = false,
+    this.subtitleMaxWidth,
+    this.subtitleFontSize,
   });
 
   /// Figma `H1` subtitle width.
@@ -74,6 +76,13 @@ class AuthHeading extends StatelessWidget {
   /// `Text/Label` (14/20) instead of `Text/Meta` — the "Пароль изменен"
   /// screen (139:5309).
   final bool largeSubtitle;
+
+  /// Overrides the subtitle width: [subtitleWidth], or unbounded with
+  /// [largeSubtitle].
+  final double? subtitleMaxWidth;
+
+  /// Overrides the subtitle size, e.g. 13 for `Text/Tag` (139:5303).
+  final double? subtitleFontSize;
 
   @override
   Widget build(BuildContext context) {
@@ -87,13 +96,17 @@ class AuthHeading extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           ConstrainedBox(
             constraints: BoxConstraints(
-              maxWidth: largeSubtitle ? double.infinity : subtitleWidth,
+              maxWidth:
+                  subtitleMaxWidth ??
+                  (largeSubtitle ? double.infinity : subtitleWidth),
             ),
             child: Text(
               subtitle,
-              style: largeSubtitle
-                  ? textTheme.labelLarge?.copyWith(height: 20 / 14)
-                  : textTheme.labelMedium,
+              style:
+                  (largeSubtitle
+                          ? textTheme.labelLarge?.copyWith(height: 20 / 14)
+                          : textTheme.labelMedium)
+                      ?.copyWith(fontSize: subtitleFontSize),
             ),
           ),
         ],
@@ -171,6 +184,7 @@ class AuthTextField extends StatelessWidget {
     this.label,
     this.errorText,
     this.hintText,
+    this.helperText,
     this.onChanged,
     this.keyboardType,
     this.obscureText = false,
@@ -184,6 +198,7 @@ class AuthTextField extends StatelessWidget {
   final String? label;
   final String? errorText;
   final String? hintText;
+  final String? helperText;
   final ValueChanged<String>? onChanged;
   final TextInputType? keyboardType;
   final bool obscureText;
@@ -200,6 +215,7 @@ class AuthTextField extends StatelessWidget {
       controller: controller,
       errorText: errorText,
       hintText: hintText,
+      helperText: helperText,
       onChanged: onChanged,
       keyboardType: keyboardType,
       obscureText: obscureText,
@@ -212,8 +228,8 @@ class AuthTextField extends StatelessWidget {
   }
 }
 
-/// Primary `AppButton` at the mockup's fixed 28px height. Disabled (grey,
-/// Variant4) while [loading].
+/// `AppButton` (primary by default) at the mockup's fixed 28px height.
+/// Disabled (grey, Variant4) while [loading].
 class AuthSubmitButton extends StatelessWidget {
   const AuthSubmitButton({
     required this.label,
@@ -221,6 +237,7 @@ class AuthSubmitButton extends StatelessWidget {
     super.key,
     this.width = AppButton.minWidth,
     this.loading = false,
+    this.variant = AppButtonVariant.primary,
   });
 
   static const double height = 28;
@@ -229,6 +246,7 @@ class AuthSubmitButton extends StatelessWidget {
   final VoidCallback onPressed;
   final double width;
   final bool loading;
+  final AppButtonVariant variant;
 
   @override
   Widget build(BuildContext context) {
@@ -240,7 +258,11 @@ class AuthSubmitButton extends StatelessWidget {
         constraints: BoxConstraints(minWidth: width),
         child: SizedBox(
           height: height,
-          child: AppButton(label: label, onPressed: loading ? null : onPressed),
+          child: AppButton(
+            label: label,
+            variant: variant,
+            onPressed: loading ? null : onPressed,
+          ),
         ),
       ),
     );

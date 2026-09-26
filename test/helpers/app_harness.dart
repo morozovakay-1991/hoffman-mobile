@@ -10,6 +10,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hoffman/core/config/feature_flags.dart';
 import 'package:hoffman/core/network/index.dart';
 import 'package:hoffman/core/router/index.dart';
+import 'package:hoffman/core/services/external_url_launcher.dart';
 import 'package:hoffman/core/widgets/index.dart';
 import 'package:hoffman/features/onboarding/index.dart';
 import 'package:hoffman/main.dart';
@@ -34,10 +35,15 @@ class FakeTokenStorage implements TokenStorage {
 class FakeFeatureFlags implements FeatureFlags {
   FakeFeatureFlags({this.registration = true});
 
+  static const String adminUrl = 'https://t.me/test_admin';
+
   bool registration;
 
   @override
   Future<bool> registrationEnabled() async => registration;
+
+  @override
+  Future<String> adminContactUrl() async => adminUrl;
 }
 
 /// A canned backend response.
@@ -134,9 +140,19 @@ class TestEnvironment {
   final FakeFeatureFlags flags;
   final bool onboardingSeen;
 
+  /// URLs opened through [externalUrlLauncherProvider].
+  final List<Uri> launchedUrls = [];
+
+  /// What the fake launcher reports; `false` = no app could open the URL.
+  bool launchSucceeds = true;
+
   List<Override> get overrides => [
     tokenStorageProvider.overrideWithValue(tokenStorage),
     featureFlagsProvider.overrideWithValue(flags),
+    externalUrlLauncherProvider.overrideWithValue((uri) async {
+      launchedUrls.add(uri);
+      return launchSucceeds;
+    }),
     // The real DioClient (base URL, AuthInterceptor, logging) over the fake
     // transport.
     dioProvider.overrideWith((ref) {
