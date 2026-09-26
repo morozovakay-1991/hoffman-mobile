@@ -44,8 +44,8 @@ bool isAuthRoute(String location) =>
 /// - Before the session is restored everything else waits on `/splash`.
 /// - Signed out: only [isAuthRoute] routes; the rest → `/login`.
 /// - Signed in: auth routes → `/home`, or → `/verification` right after
-///   registration (the verification stub is otherwise a normal signed-in
-///   route).
+///   registration (the verification screens are otherwise normal signed-in
+///   routes).
 String? authGuard({required String location, required AuthGuardState state}) {
   if (location == AppRoutes.splash) return null;
   if (location == AppRoutes.register && !state.registrationEnabled) {
@@ -119,9 +119,23 @@ GoRouter createAppRouter({
         path: AppRoutes.forgotPasswordDone,
         builder: (context, state) => const ResetDoneScreen(),
       ),
+      // Graduate verification. Siblings like the reset steps: the form is
+      // `push`ed from the question, the two results replace the stack.
       GoRoute(
         path: AppRoutes.verification,
-        builder: (context, state) => const VerificationStubScreen(),
+        builder: (context, state) => const GraduateQuestionScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.verificationForm,
+        builder: (context, state) => const GraduateFormScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.verificationConfirmed,
+        builder: (context, state) => const GraduateConfirmedScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.verificationNotConfirmed,
+        builder: (context, state) => const GraduateNotConfirmedScreen(),
       ),
       _placeholderRoute(AppRoutes.home, 'Home'),
       _placeholderRoute('/meditations', 'Meditations'),

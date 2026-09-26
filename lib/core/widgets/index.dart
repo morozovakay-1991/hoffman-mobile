@@ -4,4 +4,5 @@ export 'app_card.dart';
 export 'app_text_field.dart';
 export 'content_cards.dart';
 export 'loading_indicator.dart';
+export 'locked_overlay.dart';
 export 'state_widgets.dart';

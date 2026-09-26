@@ -157,6 +157,29 @@ class WidgetsShowcaseScreen extends StatelessWidget {
               icon: Icons.lock,
             ),
           ),
+          const _Section('LockedOverlay — signedOut'),
+          SizedBox(
+            height: 260,
+            child: LockedOverlay.signedOut(
+              onSignIn: () {},
+              onCreateAccount: () {},
+            ),
+          ),
+          const _Section('LockedOverlay — inactiveAccount'),
+          SizedBox(
+            height: 240,
+            child: LockedOverlay.inactiveAccount(onRestoreAccess: () {}),
+          ),
+          const _Section('LockedOverlay — graduateOnly (over content)'),
+          SizedBox(
+            height: 260,
+            child: LockedOverlay.graduateOnly(
+              onVerify: () {},
+              child: const ColoredBox(color: AppColors.blueTint),
+            ),
+          ),
+          const _Section('LockedOverlay — lockedDay'),
+          const SizedBox(height: 200, child: LockedOverlay.lockedDay()),
         ],
       ),
     );

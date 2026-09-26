@@ -12,4 +12,15 @@ void main() {
       isTrue,
     );
   });
+
+  test(
+    'admin_contact_url falls back to the placeholder without Firebase',
+    () async {
+      expect(
+        await RemoteConfigFeatureFlags().adminContactUrl(),
+        adminContactUrlFallback,
+      );
+      expect(Uri.parse(adminContactUrlFallback).host, 't.me');
+    },
+  );
 }

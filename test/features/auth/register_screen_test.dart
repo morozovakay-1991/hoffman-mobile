@@ -147,7 +147,7 @@ void main() {
     );
   });
 
-  testWidgets('success → /verification stub → "Продолжить" → /home', (
+  testWidgets('success → /verification question → "Нет" → /home', (
     tester,
   ) async {
     final env = TestEnvironment(backend: FakeBackend({_register: authSuccess}));
@@ -166,9 +166,9 @@ void main() {
     });
     expect(env.tokenStorage.token, 'new-token');
     expect(currentPath(container), AppRoutes.verification);
-    expect(find.byType(VerificationStubScreen), findsOneWidget);
+    expect(find.byType(GraduateQuestionScreen), findsOneWidget);
 
-    await tapAndSettle(tester, find.byKey(VerificationStubScreen.continueKey));
+    await tapAndSettle(tester, buttonIn(GraduateQuestionScreen.noKey));
 
     expect(currentPath(container), AppRoutes.home);
   });
