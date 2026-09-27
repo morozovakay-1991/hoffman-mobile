@@ -72,6 +72,11 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
     if (!confirmed || !mounted) return;
 
     setState(() => _deleting = true);
+    // Captured while mounted: this screen may be gone by the time the
+    // request completes (e.g. a deep link), and `ref`/`context` are unusable
+    // then, but the account is deleted all the same.
+    final auth = ref.read(authControllerProvider.notifier);
+    final router = GoRouter.of(context);
     try {
       await ref.read(profileRepositoryProvider).deleteAccount();
     } on ApiException catch (e) {
@@ -83,8 +88,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
     }
     // The result screen goes first: it stays reachable once signed out,
     // while this one would be redirected to /login.
-    final auth = ref.read(authControllerProvider.notifier);
-    if (mounted) context.go(AppRoutes.accountDeleted);
+    router.go(AppRoutes.accountDeleted);
     await auth.accountDeleted();
   }
 
@@ -92,84 +96,91 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    return ProfileScaffold(
-      onBack: () =>
-          ProfileScaffold.popOrGo(context, AppRoutes.profilePersonalData),
-      children: [
-        ProfileScaffold.padded(
-          Padding(
-            padding: const EdgeInsets.only(
-              top: AppSpacing.xl + AppSpacing.xs,
-              bottom: AppSpacing.xs,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Удаление аккаунта',
-                  style: textTheme.titleLarge?.copyWith(height: 32 / 20),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                ConstrainedBox(
-                  constraints: const BoxConstraints(
-                    maxWidth: DeleteAccountScreen.subtitleWidth,
+    // No leaving while DELETE /profile is in flight: its outcome decides
+    // where the user lands (back bar, system back and the iOS swipe).
+    return PopScope(
+      canPop: !_deleting,
+      child: ProfileScaffold(
+        onBack: () {
+          if (_deleting) return;
+          ProfileScaffold.popOrGo(context, AppRoutes.profilePersonalData);
+        },
+        children: [
+          ProfileScaffold.padded(
+            Padding(
+              padding: const EdgeInsets.only(
+                top: AppSpacing.xl + AppSpacing.xs,
+                bottom: AppSpacing.xs,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Удаление аккаунта',
+                    style: textTheme.titleLarge?.copyWith(height: 32 / 20),
                   ),
-                  child: Text(
-                    'Мы удалим ваш аккаунт и связанные данные. Некоторые '
-                    'данные могут храниться дольше по закону. Процесс может '
-                    'занять до 30 дней.',
-                    // Figma: Golos Text Medium 13/18.
-                    style: textTheme.labelMedium?.copyWith(
-                      fontSize: 13,
-                      height: 18 / 13,
+                  const SizedBox(height: AppSpacing.sm),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      maxWidth: DeleteAccountScreen.subtitleWidth,
+                    ),
+                    child: Text(
+                      'Мы удалим ваш аккаунт и связанные данные. Некоторые '
+                      'данные могут храниться дольше по закону. Процесс может '
+                      'занять до 30 дней.',
+                      // Figma: Golos Text Medium 13/18.
+                      style: textTheme.labelMedium?.copyWith(
+                        fontSize: 13,
+                        height: 18 / 13,
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 60),
-        ProfileScaffold.padded(
-          AuthSubmitButton(
-            key: DeleteAccountScreen.requestDeletionKey,
-            label: 'Запросить удаление данных',
-            width: DeleteAccountScreen.buttonWidth,
-            loading: _busy,
-            onPressed: _requestDeletion,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        ProfileScaffold.padded(
-          AuthSubmitButton(
-            key: DeleteAccountScreen.deleteAccountKey,
-            label: 'Удалить аккаунт',
-            width: DeleteAccountScreen.buttonWidth,
-            variant: AppButtonVariant.secondary,
-            loading: _busy,
-            onPressed: _deleteAccount,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        ProfileScaffold.padded(
-          Align(
-            alignment: Alignment.centerLeft,
-            child: AuthLink(
-              key: DeleteAccountScreen.privacyPolicyKey,
-              label: 'Политика конфиденциальности',
-              onTap: () => context.push(
-                AppRoutes.profileLegalDocument(
-                  LegalDocumentSummary.privacySlug,
-                ),
-              ),
-              style: AuthLink.linkStyle(context).copyWith(
-                decoration: TextDecoration.underline,
-                decorationColor: AppColors.cherryRed,
+                ],
               ),
             ),
           ),
-        ),
-      ],
+          const SizedBox(height: 60),
+          ProfileScaffold.padded(
+            AuthSubmitButton(
+              key: DeleteAccountScreen.requestDeletionKey,
+              label: 'Запросить удаление данных',
+              width: DeleteAccountScreen.buttonWidth,
+              loading: _busy,
+              onPressed: _requestDeletion,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          ProfileScaffold.padded(
+            AuthSubmitButton(
+              key: DeleteAccountScreen.deleteAccountKey,
+              label: 'Удалить аккаунт',
+              width: DeleteAccountScreen.buttonWidth,
+              variant: AppButtonVariant.secondary,
+              loading: _busy,
+              onPressed: _deleteAccount,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          ProfileScaffold.padded(
+            Align(
+              alignment: Alignment.centerLeft,
+              child: AuthLink(
+                key: DeleteAccountScreen.privacyPolicyKey,
+                label: 'Политика конфиденциальности',
+                onTap: () => context.push(
+                  AppRoutes.profileLegalDocument(
+                    LegalDocumentSummary.privacySlug,
+                  ),
+                ),
+                style: AuthLink.linkStyle(context).copyWith(
+                  decoration: TextDecoration.underline,
+                  decorationColor: AppColors.cherryRed,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

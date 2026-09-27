@@ -126,6 +126,69 @@ void main() {
       expect(find.byKey(AccountDeletedScreen.registerKey), findsNothing);
     });
 
+    group('while DELETE /profile is in flight', () {
+      const slowDelete = FakeResponse(204, null, {}, Duration(seconds: 2));
+
+      testWidgets('back (bar and system) is blocked until it completes', (
+        tester,
+      ) async {
+        final env = profileEnv({deleteProfile: slowDelete});
+        final container = await _open(tester, env);
+
+        await _tapDelete(tester);
+        await tester.tap(find.byKey(ConfirmSheet.confirmKey));
+        await tester.pump(const Duration(milliseconds: 500));
+        expect(env.backend.requestsTo(deleteProfile), hasLength(1));
+
+        await tester.tap(find.byTooltip('Back'));
+        await tester.pump(const Duration(milliseconds: 100));
+        await tester.binding.handlePopRoute();
+        await tester.pump(const Duration(milliseconds: 100));
+        expect(currentPath(container), AppRoutes.profileDeleteAccount);
+        expect(find.byType(DeleteAccountScreen), findsOneWidget);
+
+        await tester.pump(const Duration(seconds: 2));
+        await tester.pumpAndSettle();
+
+        expect(currentPath(container), AppRoutes.accountDeleted);
+        expect(env.tokenStorage.token, isNull);
+      });
+
+      testWidgets('the screen closing meanwhile (e.g. a deep link) still '
+          'ends on "Ваш аккаунт удален" with the session cleared', (
+        tester,
+      ) async {
+        final env = profileEnv({deleteProfile: slowDelete});
+        final container = await _open(tester, env);
+
+        await _tapDelete(tester);
+        await tester.tap(find.byKey(ConfirmSheet.confirmKey));
+        await tester.pump(const Duration(milliseconds: 500));
+        container.read(appRouterProvider).go(AppRoutes.home);
+        // Frames for the page transition, well inside the 2s request.
+        for (var i = 0; i < 10; i++) {
+          await tester.pump(const Duration(milliseconds: 50));
+        }
+        // Disposed, not just offstage.
+        expect(
+          find.byType(DeleteAccountScreen, skipOffstage: false),
+          findsNothing,
+        );
+
+        await tester.pump(const Duration(seconds: 2));
+        await tester.pumpAndSettle();
+
+        expect(tester.takeException(), isNull);
+        expect(currentPath(container), AppRoutes.accountDeleted);
+        expect(find.byType(AccountDeletedScreen), findsOneWidget);
+        expect(env.tokenStorage.token, isNull);
+        expect(
+          container.read(authControllerProvider).value,
+          const Unauthenticated(),
+        );
+      });
+    });
+
     testWidgets('offline: the account and session stay, with a message', (
       tester,
     ) async {

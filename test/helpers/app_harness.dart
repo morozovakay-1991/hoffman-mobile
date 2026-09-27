@@ -48,7 +48,12 @@ class FakeFeatureFlags implements FeatureFlags {
 
 /// A canned backend response.
 class FakeResponse {
-  const FakeResponse(this.status, [this.body, this.headers = const {}]);
+  const FakeResponse(
+    this.status, [
+    this.body,
+    this.headers = const {},
+    this.delay = Duration.zero,
+  ]);
 
   /// hoffman-backend's error shape, `{error: {code, message, fields}}`.
   factory FakeResponse.error(
@@ -65,6 +70,9 @@ class FakeResponse {
   final int status;
   final Object? body;
   final Map<String, String> headers;
+
+  /// How long the backend takes to answer, to catch the UI mid-request.
+  final Duration delay;
 }
 
 const Map<String, Object> testUserJson = {
@@ -110,6 +118,9 @@ class FakeBackend implements HttpClientAdapter {
     final response =
         routes['${options.method} ${options.path}'] ??
         FakeResponse.error(404, 'NOT_FOUND');
+    if (response.delay > Duration.zero) {
+      await Future<void>.delayed(response.delay);
+    }
     return ResponseBody.fromString(
       response.body == null ? '' : jsonEncode(response.body),
       response.status,
