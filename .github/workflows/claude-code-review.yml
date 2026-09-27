@@ -47,7 +47,7 @@ jobs:
           # silently denied (10 denials on PR #10). The appended system prompt
           # tells the reviewer to run gh commands bare.
           claude_args: >-
-            --allowedTools "Bash(gh issue view:*)" "Bash(gh search:*)" "Bash(gh issue list:*)" "Bash(gh pr comment:*)" "Bash(gh pr diff:*)" "Bash(gh pr view:*)" "Bash(gh pr list:*)" "Bash(gh api:*)" "Task" "mcp__github_inline_comment__create_inline_comment"
+            --allowedTools "Bash(gh issue view:*)" "Bash(gh search:*)" "Bash(gh issue list:*)" "Bash(gh pr comment:*)" "Bash(gh pr diff:*)" "Bash(gh pr view:*)" "Bash(gh pr list:*)" "Bash(gh api:*)" "Skill" "Task" "mcp__github_inline_comment__create_inline_comment"
             --append-system-prompt "When fetching the PR diff or any PR data with gh, run each gh command on its own as a single bare command. Redirects (>), pipes (|) and chained commands (; or &&) are forbidden: in CI they are silently blocked. Read the output directly instead of saving it to a file or filtering it."
           # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
           # or https://code.claude.com/docs/en/cli-reference for available options
