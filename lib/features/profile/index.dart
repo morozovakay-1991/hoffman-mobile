@@ -1,1 +1,19 @@
-
+export 'application/email_change_controller.dart';
+export 'application/legal_providers.dart';
+export 'application/profile_controller.dart';
+export 'data/legal_repository.dart';
+export 'data/profile_repository.dart';
+export 'domain/legal_document.dart';
+export 'domain/profile.dart';
+export 'presentation/delete_account/account_deleted_screen.dart';
+export 'presentation/delete_account/delete_account_screen.dart';
+export 'presentation/legal/legal_document_screen.dart';
+export 'presentation/legal/legal_documents_screen.dart';
+export 'presentation/notifications_screen.dart';
+export 'presentation/personal_data/change_password_screen.dart';
+export 'presentation/personal_data/edit_email_screen.dart';
+export 'presentation/personal_data/edit_name_screen.dart';
+export 'presentation/personal_data/email_code_screen.dart';
+export 'presentation/personal_data_screen.dart';
+export 'presentation/profile_screen.dart';
+export 'presentation/widgets/profile_widgets.dart';

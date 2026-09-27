@@ -180,6 +180,32 @@ class WidgetsShowcaseScreen extends StatelessWidget {
           ),
           const _Section('LockedOverlay — lockedDay'),
           const SizedBox(height: 200, child: LockedOverlay.lockedDay()),
+          const _Section('ConfirmSheet — tap to open'),
+          Builder(
+            builder: (context) => Wrap(
+              spacing: AppSpacing.sm,
+              children: [
+                AppButton(
+                  label: 'Выйти',
+                  variant: AppButtonVariant.secondary,
+                  onPressed: () => showConfirmSheet(
+                    context,
+                    message: 'Выйти из аккаунта?',
+                    confirmLabel: 'Выйти',
+                  ),
+                ),
+                AppButton(
+                  label: 'Удалить аккаунт',
+                  variant: AppButtonVariant.secondary,
+                  onPressed: () => showConfirmSheet(
+                    context,
+                    message: 'Данные будут удалены безвозвратно',
+                    confirmLabel: 'Удалить аккаунт',
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );

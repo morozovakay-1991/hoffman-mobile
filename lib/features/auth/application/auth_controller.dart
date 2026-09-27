@@ -103,6 +103,21 @@ class AuthController extends AsyncNotifier<AuthState> {
     state = const AsyncData(Unauthenticated());
   }
 
+  /// Keeps the session's user in sync after the profile changed their name
+  /// or email. Ignored for another account (signed out/switched meanwhile).
+  void userUpdated(AuthUser user) {
+    final current = state.value;
+    if (current is! Authenticated || current.user.id != user.id) return;
+    state = AsyncData(Authenticated(user));
+  }
+
+  /// Ends the session of an account the backend has just deleted: its token
+  /// is already revoked, so unlike [logout] nothing is sent.
+  Future<void> accountDeleted() async {
+    await _repository.clearToken();
+    state = const AsyncData(Unauthenticated());
+  }
+
   Future<void> _onSessionExpired() async {
     if (state.value is! Authenticated) return;
     await _repository.clearToken();

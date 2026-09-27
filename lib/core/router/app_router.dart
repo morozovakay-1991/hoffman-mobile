@@ -6,6 +6,7 @@ import 'package:hoffman/core/router/app_routes.dart';
 import 'package:hoffman/core/router/placeholder_screen.dart';
 import 'package:hoffman/features/auth/index.dart';
 import 'package:hoffman/features/onboarding/index.dart';
+import 'package:hoffman/features/profile/index.dart';
 
 /// Where the session stands, as far as routing is concerned.
 enum AuthStatus {
@@ -40,6 +41,8 @@ bool isAuthRoute(String location) =>
 /// Access control redirect, wired as the router's top-level `redirect`.
 ///
 /// - `/splash` is always reachable; it decides where to go on its own.
+/// - `/account-deleted` is always reachable: it is opened while the deleted
+///   account is still signed in and must survive the sign-out that follows.
 /// - `/register` is blocked (→ `/login`) when `registration_enabled` is off.
 /// - Before the session is restored everything else waits on `/splash`.
 /// - Signed out: only [isAuthRoute] routes; the rest → `/login`.
@@ -48,6 +51,7 @@ bool isAuthRoute(String location) =>
 ///   routes).
 String? authGuard({required String location, required AuthGuardState state}) {
   if (location == AppRoutes.splash) return null;
+  if (location == AppRoutes.accountDeleted) return null;
   if (location == AppRoutes.register && !state.registrationEnabled) {
     return AppRoutes.login;
   }
@@ -149,12 +153,55 @@ GoRouter createAppRouter({
       _placeholderRoute('/diary/:id', 'Diary entry'),
       _placeholderRoute('/articles', 'Articles'),
       _placeholderRoute('/articles/:id', 'Article'),
-      _placeholderRoute('/profile', 'Profile'),
-      _placeholderRoute('/profile/personal-data', 'Personal data'),
-      _placeholderRoute('/profile/subscription', 'Subscription'),
-      _placeholderRoute('/profile/notifications', 'Notifications'),
-      _placeholderRoute('/profile/legal', 'Legal'),
-      _placeholderRoute('/profile/delete-account', 'Delete account'),
+      // Profile. Flat siblings like the auth steps: every sub-screen is
+      // `push`ed, so back returns to wherever it was opened from. There is
+      // no subscription screen by design — subscriptions are managed on the
+      // website only.
+      GoRoute(
+        path: AppRoutes.profile,
+        builder: (context, state) => const ProfileScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.profilePersonalData,
+        builder: (context, state) => const PersonalDataScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.profileName,
+        builder: (context, state) => const EditNameScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.profileEmail,
+        builder: (context, state) => const EditEmailScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.profileEmailCode,
+        builder: (context, state) => const EmailCodeScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.profilePassword,
+        builder: (context, state) => const ChangePasswordScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.profileDeleteAccount,
+        builder: (context, state) => const DeleteAccountScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.profileNotifications,
+        builder: (context, state) => const NotificationsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.profileLegal,
+        builder: (context, state) => const LegalDocumentsScreen(),
+      ),
+      GoRoute(
+        path: '${AppRoutes.profileLegal}/:slug',
+        builder: (context, state) =>
+            LegalDocumentScreen(slug: state.pathParameters['slug']!),
+      ),
+      GoRoute(
+        path: AppRoutes.accountDeleted,
+        builder: (context, state) => const AccountDeletedScreen(),
+      ),
     ],
   );
 }
@@ -164,7 +211,13 @@ GoRouter createAppRouter({
 final appRouterProvider = Provider<GoRouter>((ref) {
   final refresh = ValueNotifier<int>(0);
   ref
-    ..listen(authControllerProvider, (_, _) => refresh.value++)
+    // Only the session status matters to the guard. Refreshing on every
+    // AuthState change (e.g. the profile renaming the user) would re-apply
+    // a stale location over a navigation made in the same frame.
+    ..listen(
+      authControllerProvider.select(authStatusOf),
+      (_, _) => refresh.value++,
+    )
     ..listen(registrationEnabledProvider, (_, _) => refresh.value++);
 
   final router = createAppRouter(
