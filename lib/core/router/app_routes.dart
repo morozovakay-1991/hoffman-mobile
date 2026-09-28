@@ -17,7 +17,21 @@ abstract final class AppRoutes {
   /// "Статус не подтвержден" — Figma 139:5306.
   static const String verificationNotConfirmed = '/verification/not-confirmed';
 
+  /// Главная — Figma 612:7209.
   static const String home = '/home';
+
+  // Content sections. Their list routes are the bottom tabs (except
+  // [topics]); the screens are still placeholders.
+  static const String meditations = '/meditations';
+  static const String tools = '/tools';
+  static const String topics = '/topics';
+  static const String diary = '/diary';
+  static const String articles = '/articles';
+
+  static String meditation(int id) => '$meditations/$id';
+  static String tool(int id) => '$tools/$id';
+  static String topic(int id) => '$topics/$id';
+  static String article(int id) => '$articles/$id';
 
   /// "Личный кабинет" — Figma 651:3334 (not verified) / 651:3729 (verified).
   static const String profile = '/profile';

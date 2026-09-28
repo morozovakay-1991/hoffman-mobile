@@ -1,10 +1,12 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoffman/core/config/feature_flags.dart';
 import 'package:hoffman/core/router/app_routes.dart';
+import 'package:hoffman/core/router/app_tab_shell.dart';
 import 'package:hoffman/core/router/placeholder_screen.dart';
 import 'package:hoffman/features/auth/index.dart';
+import 'package:hoffman/features/home/index.dart';
 import 'package:hoffman/features/onboarding/index.dart';
 import 'package:hoffman/features/profile/index.dart';
 
@@ -76,6 +78,16 @@ GoRoute _placeholderRoute(String path, String title) {
   );
 }
 
+/// An [AppTab] route: switching tabs replaces the screen without a
+/// transition.
+GoRoute _tabRoute(String path, Widget screen) {
+  return GoRoute(
+    path: path,
+    pageBuilder: (context, state) =>
+        NoTransitionPage(key: state.pageKey, child: screen),
+  );
+}
+
 /// Builds a fresh [GoRouter]. [readGuardState] is called on every
 /// navigation and on each [refreshListenable] tick; tests pass fixed values.
 GoRouter createAppRouter({
@@ -141,17 +153,31 @@ GoRouter createAppRouter({
         path: AppRoutes.verificationNotConfirmed,
         builder: (context, state) => const GraduateNotConfirmedScreen(),
       ),
-      _placeholderRoute(AppRoutes.home, 'Home'),
-      _placeholderRoute('/meditations', 'Meditations'),
+      // The bottom tabs. Content screens below are pushed over the shell,
+      // full screen.
+      ShellRoute(
+        builder: (context, state, child) =>
+            AppTabShell(location: state.uri.path, child: child),
+        routes: [
+          _tabRoute(AppRoutes.home, const HomeScreen()),
+          _tabRoute(
+            AppRoutes.articles,
+            const PlaceholderScreen(title: 'Articles'),
+          ),
+          _tabRoute(
+            AppRoutes.meditations,
+            const PlaceholderScreen(title: 'Meditations'),
+          ),
+          _tabRoute(AppRoutes.tools, const PlaceholderScreen(title: 'Tools')),
+          _tabRoute(AppRoutes.diary, const PlaceholderScreen(title: 'Diary')),
+        ],
+      ),
       _placeholderRoute('/meditations/:id', 'Meditation'),
       _placeholderRoute('/meditations/:id/player', 'Meditation player'),
-      _placeholderRoute('/tools', 'Tools'),
       _placeholderRoute('/tools/:id', 'Tool'),
-      _placeholderRoute('/topics', 'Topics'),
+      _placeholderRoute(AppRoutes.topics, 'Topics'),
       _placeholderRoute('/topics/:id', 'Topic'),
-      _placeholderRoute('/diary', 'Diary'),
       _placeholderRoute('/diary/:id', 'Diary entry'),
-      _placeholderRoute('/articles', 'Articles'),
       _placeholderRoute('/articles/:id', 'Article'),
       // Profile. Flat siblings like the auth steps: every sub-screen is
       // `push`ed, so back returns to wherever it was opened from. There is
