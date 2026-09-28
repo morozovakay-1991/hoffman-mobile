@@ -16,3 +16,4 @@ export 'presentation/reset_password/reset_new_password_screen.dart';
 export 'presentation/verification/graduate_form_screen.dart';
 export 'presentation/verification/graduate_question_screen.dart';
 export 'presentation/verification/graduate_result_screens.dart';
+export 'presentation/widgets/auth_widgets.dart';

@@ -57,6 +57,9 @@ dependencies:
   url_launcher: ^6.3.2
   google_fonts: ^8.2.1
   flutter_html: ^3.0.0
+  # flutter_html 3.0.0 (the latest) calls `matches` from html's
+  # src/query_selector.dart, which html 0.15.7 removed.
+  html: ">=0.15.5 <0.15.7"
   google_sign_in: ^7.2.0
   sign_in_with_apple: ^8.2.0
   firebase_remote_config: ^6.7.0
@@ -95,6 +98,7 @@ flutter:
     - assets/icons/
     - assets/images/home/
     - assets/images/onboarding/
+    - assets/images/profile/
     - assets/images/splash/
 
   # To add assets to your application, add an assets section, like this:

@@ -20,13 +20,22 @@ const _protectedRoutes = <String>[
   '/diary/42',
   '/articles',
   '/articles/42',
-  '/profile',
-  '/profile/personal-data',
-  '/profile/subscription',
-  '/profile/notifications',
-  '/profile/legal',
-  '/profile/delete-account',
+  AppRoutes.profile,
+  AppRoutes.profilePersonalData,
+  AppRoutes.profileName,
+  AppRoutes.profileEmail,
+  AppRoutes.profileEmailCode,
+  AppRoutes.profilePassword,
+  AppRoutes.profileDeleteAccount,
+  AppRoutes.profileNotifications,
+  AppRoutes.profileLegal,
+  '/profile/legal/privacy',
 ];
+
+/// Protected routes still served by [PlaceholderScreen].
+final Iterable<String> _placeholderRoutes = _protectedRoutes.where(
+  (p) => p != AppRoutes.verification && !p.startsWith(AppRoutes.profile),
+);
 
 const _authRoutes = <String>[
   AppRoutes.onboarding,
@@ -103,6 +112,16 @@ void main() {
       );
     });
 
+    test('/account-deleted stays open whatever the session', () {
+      for (final status in AuthStatus.values) {
+        expect(
+          authGuard(location: AppRoutes.accountDeleted, state: _state(status)),
+          isNull,
+          reason: '$status',
+        );
+      }
+    });
+
     test('registration_enabled = false blocks /register for everyone', () {
       for (final status in AuthStatus.values) {
         expect(
@@ -136,9 +155,7 @@ void main() {
     await tester.pumpWidget(MaterialApp.router(routerConfig: router));
     await tester.pumpAndSettle();
 
-    for (final path in _protectedRoutes.where(
-      (p) => p != AppRoutes.verification,
-    )) {
+    for (final path in _placeholderRoutes) {
       router.go(path);
       await tester.pumpAndSettle();
 

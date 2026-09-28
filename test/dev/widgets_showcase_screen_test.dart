@@ -91,4 +91,21 @@ void main() {
       expect(find.text(label), findsOneWidget);
     }
   });
+
+  testWidgets('showcase opens the ConfirmSheet', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(theme: AppTheme.light, home: const WidgetsShowcaseScreen()),
+    );
+
+    await tester.scrollUntilVisible(
+      find.widgetWithText(AppButton, 'Удалить аккаунт'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.widgetWithText(AppButton, 'Удалить аккаунт'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ConfirmSheet), findsOneWidget);
+    expect(find.text('Данные будут удалены безвозвратно'), findsOneWidget);
+  });
 }
