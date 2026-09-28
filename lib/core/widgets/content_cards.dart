@@ -13,7 +13,7 @@ const double _iconSize = 16;
 ///
 /// Title on top; below it the square [cover] with a play icon (left) and the
 /// details column (right): duration, description and the action link. The
-/// whole card handles [onTap].
+/// whole card handles [onTap]. [isLocked] adds a [LockedMark] to the title.
 class MeditationCard extends StatelessWidget {
   const MeditationCard({
     required this.title,
@@ -22,6 +22,7 @@ class MeditationCard extends StatelessWidget {
     required this.description,
     required this.actionLabel,
     super.key,
+    this.isLocked = false,
     this.onTap,
   });
 
@@ -37,6 +38,7 @@ class MeditationCard extends StatelessWidget {
   final String duration;
   final String description;
   final String actionLabel;
+  final bool isLocked;
   final VoidCallback? onTap;
 
   @override
@@ -46,7 +48,7 @@ class MeditationCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _CardTitle(title),
+          _CardTitle(title, isLocked: isLocked),
           const SizedBox(height: AppSpacing.xl),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -87,7 +89,7 @@ class MeditationCard extends StatelessWidget {
 ///
 /// Top divider, then the title; below it the details column (date,
 /// description, action link) on the left and the [cover] on the right. The
-/// whole card handles [onTap].
+/// whole card handles [onTap]. [isLocked] adds a [LockedMark] to the title.
 class ArticleListCard extends StatelessWidget {
   const ArticleListCard({
     required this.title,
@@ -96,6 +98,7 @@ class ArticleListCard extends StatelessWidget {
     required this.description,
     required this.actionLabel,
     super.key,
+    this.isLocked = false,
     this.onTap,
   });
 
@@ -110,6 +113,7 @@ class ArticleListCard extends StatelessWidget {
   final String date;
   final String description;
   final String actionLabel;
+  final bool isLocked;
   final VoidCallback? onTap;
 
   @override
@@ -119,7 +123,7 @@ class ArticleListCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _CardTitle(title),
+          _CardTitle(title, isLocked: isLocked),
           const SizedBox(height: AppSpacing.lg),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -148,7 +152,7 @@ class ArticleListCard extends StatelessWidget {
 ///
 /// Top divider, title, then the description with a [tag] [AppBadge]
 /// ([AppBadgeVariant.tinted]) on its right, then the action link. The whole
-/// card handles [onTap].
+/// card handles [onTap]. [isLocked] adds a [LockedMark] to the title.
 class ToolListCard extends StatelessWidget {
   const ToolListCard({
     required this.title,
@@ -156,13 +160,17 @@ class ToolListCard extends StatelessWidget {
     required this.tag,
     required this.actionLabel,
     super.key,
+    this.isLocked = false,
     this.onTap,
   });
 
   final String title;
   final String description;
-  final String tag;
+
+  /// `null` hides the badge (e.g. a tool without a stage).
+  final String? tag;
   final String actionLabel;
+  final bool isLocked;
   final VoidCallback? onTap;
 
   @override
@@ -172,16 +180,18 @@ class ToolListCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _CardTitle(title),
+          _CardTitle(title, isLocked: isLocked),
           const SizedBox(height: AppSpacing.lg),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(child: _Description(description)),
-              // TODO(figma): the mockup gives the text a fixed 231px width;
-              // the minimum gap before the badge is not defined.
-              const SizedBox(width: AppSpacing.md),
-              AppBadge(label: tag, variant: AppBadgeVariant.tinted),
+              if (tag case final tag?) ...[
+                // TODO(figma): the mockup gives the text a fixed 231px width;
+                // the minimum gap before the badge is not defined.
+                const SizedBox(width: AppSpacing.md),
+                AppBadge(label: tag, variant: AppBadgeVariant.tinted),
+              ],
             ],
           ),
           const SizedBox(height: AppSpacing.lg),
@@ -198,7 +208,9 @@ class ToolListCard extends StatelessWidget {
 /// Top divider in both states. Folded: title with a `+` icon and the
 /// [subtitle]. Expanded: a `–` icon instead of `+`, then the [cover] next to
 /// the multi-paragraph [body] and the action link. The whole card handles
-/// [onTap]; the owner toggles [isExpanded].
+/// [onTap]; the owner toggles [isExpanded]. With [onActionTap] set, the
+/// action link handles its own taps (e.g. opens the topic while [onTap]
+/// folds the card). [isLocked] adds a [LockedMark] to the title.
 class ThemeListCard extends StatelessWidget {
   const ThemeListCard({
     required this.title,
@@ -208,7 +220,9 @@ class ThemeListCard extends StatelessWidget {
     required this.actionLabel,
     super.key,
     this.isExpanded = false,
+    this.isLocked = false,
     this.onTap,
+    this.onActionTap,
   });
 
   static const double coverSize = 130;
@@ -234,7 +248,9 @@ class ThemeListCard extends StatelessWidget {
   final String body;
   final String actionLabel;
   final bool isExpanded;
+  final bool isLocked;
   final VoidCallback? onTap;
+  final VoidCallback? onActionTap;
 
   @override
   Widget build(BuildContext context) {
@@ -248,7 +264,7 @@ class ThemeListCard extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(child: _CardTitle(title)),
+                Expanded(child: _CardTitle(title, isLocked: isLocked)),
                 Padding(
                   padding: const EdgeInsets.only(top: _headerIconTop),
                   child: isExpanded
@@ -278,7 +294,13 @@ class ThemeListCard extends StatelessWidget {
                   child: ClipRect(child: cover),
                 ),
                 _DetailsColumn(
-                  children: [_Description(body), _ActionLink(actionLabel)],
+                  children: [
+                    _Description(body),
+                    _Tappable(
+                      onTap: onActionTap,
+                      child: _ActionLink(actionLabel),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -340,13 +362,52 @@ class _Tappable extends StatelessWidget {
 }
 
 class _CardTitle extends StatelessWidget {
-  const _CardTitle(this.text);
+  const _CardTitle(this.text, {this.isLocked = false});
 
   final String text;
+  final bool isLocked;
 
   @override
   Widget build(BuildContext context) {
-    return Text(text, style: Theme.of(context).textTheme.titleLarge);
+    final title = Text(text, style: Theme.of(context).textTheme.titleLarge);
+    if (!isLocked) return title;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Flexible(child: title),
+        const SizedBox(width: AppSpacing.sm),
+        const Padding(
+          // Centers the mark on the first line (20px × 1.15).
+          padding: EdgeInsets.only(top: (23 - LockedMark.size) / 2),
+          child: LockedMark(),
+        ),
+      ],
+    );
+  }
+}
+
+/// Lock icon marking content the user's access level does not open — shown
+/// next to a card title. The card stays tappable: the content screen itself
+/// shows `LockedOverlay` with the way to get access.
+// TODO(figma): no locked card in the mockups; the icon matches the one in
+// LockedOverlay.
+class LockedMark extends StatelessWidget {
+  const LockedMark({super.key, this.color = AppColors.basicBlack});
+
+  static const double size = 16;
+  static const String semanticLabel = 'Недоступно';
+
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Icon(
+      Icons.lock,
+      size: size,
+      color: color,
+      semanticLabel: semanticLabel,
+    );
   }
 }
 

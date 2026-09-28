@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hoffman/core/router/index.dart';
+import 'package:hoffman/core/widgets/index.dart';
 import 'package:hoffman/features/auth/index.dart';
 
 import '../../helpers/app_harness.dart';
@@ -34,8 +35,19 @@ const _protectedRoutes = <String>[
 
 /// Protected routes still served by [PlaceholderScreen].
 final Iterable<String> _placeholderRoutes = _protectedRoutes.where(
-  (p) => p != AppRoutes.verification && !p.startsWith(AppRoutes.profile),
+  (p) =>
+      p != AppRoutes.verification &&
+      p != AppRoutes.home &&
+      !p.startsWith(AppRoutes.profile),
 );
+
+/// Bottom tabs other than home, which needs the providers.
+const _placeholderTabs = <String>[
+  AppRoutes.articles,
+  AppRoutes.meditations,
+  AppRoutes.tools,
+  AppRoutes.diary,
+];
 
 const _authRoutes = <String>[
   AppRoutes.onboarding,
@@ -147,7 +159,7 @@ void main() {
     tester,
   ) async {
     final router = createAppRouter(
-      initialLocation: AppRoutes.home,
+      initialLocation: AppRoutes.meditations,
       readGuardState: () => _state(AuthStatus.signedIn),
     );
     addTearDown(router.dispose);
@@ -161,6 +173,46 @@ void main() {
 
       expect(router.routerDelegate.currentConfiguration.uri.path, path);
       expect(find.byType(PlaceholderScreen), findsOneWidget);
+      // The tab bar is on the tab lists only; content screens are full
+      // screen.
+      expect(
+        find.byType(AppTabBar),
+        _placeholderTabs.contains(path) ? findsOneWidget : findsNothing,
+        reason: path,
+      );
+    }
+  });
+
+  testWidgets('tab bar: five tabs in the mockup order, tapping one opens its '
+      'section and marks it selected', (tester) async {
+    final router = createAppRouter(
+      initialLocation: AppRoutes.meditations,
+      readGuardState: () => _state(AuthStatus.signedIn),
+    );
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpAndSettle();
+
+    final bar = tester.widget<AppTabBar>(find.byType(AppTabBar));
+    expect(bar.items.map((i) => i.label), [
+      'Главная',
+      'Статьи',
+      'Медитации',
+      'Инструменты',
+      'Дневник',
+    ]);
+    expect(bar.currentIndex, AppTab.meditations.index);
+
+    for (final tab in [AppTab.articles, AppTab.tools, AppTab.diary]) {
+      await tester.tap(find.bySemanticsLabel(tab.item.label));
+      await tester.pumpAndSettle();
+
+      expect(router.routerDelegate.currentConfiguration.uri.path, tab.route);
+      expect(
+        tester.widget<AppTabBar>(find.byType(AppTabBar)).currentIndex,
+        tab.index,
+      );
     }
   });
 

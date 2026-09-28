@@ -340,4 +340,101 @@ void main() {
       );
     });
   });
+
+  group('locked content', () {
+    final cards = <String, Widget Function({required bool isLocked})>{
+      'MeditationCard': ({required isLocked}) => MeditationCard(
+        title: 'Утренняя медитация',
+        cover: _cover,
+        duration: '25 минут',
+        description: 'Описание',
+        actionLabel: 'Начать',
+        isLocked: isLocked,
+      ),
+      'ArticleListCard': ({required isLocked}) => ArticleListCard(
+        title: 'Утренняя медитация',
+        cover: _cover,
+        date: 'Март, 2025',
+        description: 'Описание',
+        actionLabel: 'Читать',
+        isLocked: isLocked,
+      ),
+      'ToolListCard': ({required isLocked}) => ToolListCard(
+        title: 'Утренняя медитация',
+        description: 'Описание',
+        tag: 'выражение',
+        actionLabel: 'Читать',
+        isLocked: isLocked,
+      ),
+      'ThemeListCard': ({required isLocked}) => ThemeListCard(
+        title: 'Утренняя медитация',
+        subtitle: 'Подзаголовок',
+        cover: _cover,
+        body: 'Текст',
+        actionLabel: 'Читать',
+        isLocked: isLocked,
+      ),
+    };
+
+    for (final MapEntry(key: name, value: build) in cards.entries) {
+      testWidgets('$name: a lock after the title only when locked', (
+        tester,
+      ) async {
+        await pumpThemed(tester, build(isLocked: false), width: _width);
+        expect(find.byType(LockedMark), findsNothing);
+
+        await pumpThemed(tester, build(isLocked: true), width: _width);
+        expect(find.byType(LockedMark), findsOneWidget);
+        expect(
+          tester.getCenter(find.byType(LockedMark)).dx,
+          greaterThan(tester.getCenter(find.text('Утренняя медитация')).dx),
+        );
+        expect(
+          tester.widget<Icon>(find.byIcon(Icons.lock)).semanticLabel,
+          LockedMark.semanticLabel,
+        );
+      });
+    }
+  });
+
+  testWidgets('ToolListCard: no badge without a tag', (tester) async {
+    await pumpThemed(
+      tester,
+      const ToolListCard(
+        title: 'Выражение гнева',
+        description: 'Описание',
+        tag: null,
+        actionLabel: 'Читать',
+      ),
+      width: _width,
+    );
+
+    expect(find.byType(AppBadge), findsNothing);
+  });
+
+  testWidgets('ThemeListCard: onActionTap takes the action link, onTap the '
+      'rest of the card', (tester) async {
+    var cardTaps = 0;
+    var actionTaps = 0;
+    await pumpThemed(
+      tester,
+      ThemeListCard(
+        title: 'Границы',
+        subtitle: 'Подзаголовок',
+        cover: _cover,
+        body: 'Текст',
+        actionLabel: 'Читать',
+        isExpanded: true,
+        onTap: () => cardTaps++,
+        onActionTap: () => actionTaps++,
+      ),
+      width: _width,
+    );
+
+    await tester.tap(find.text('Читать'));
+    expect((cardTaps, actionTaps), (0, 1));
+
+    await tester.tap(find.text('Границы'));
+    expect((cardTaps, actionTaps), (1, 1));
+  });
 }
