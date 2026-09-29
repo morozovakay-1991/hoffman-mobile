@@ -45,14 +45,15 @@ dependencies:
   hive_flutter: ^1.1.0
   flutter_secure_storage: ^11.1.0
   cached_network_image: ^4.0.0
-  connectivity_plus: ^7.3.1
+  # Pinned: 7.1.0+ uses NWPath.isUltraConstrained (iOS 26 SDK) and fails to build on Xcode 16.x.
+  connectivity_plus: 7.0.0
   just_audio: ^0.10.6
   audio_service: ^0.18.19
   just_audio_background: ^0.0.1-beta.17
-  firebase_core: ^4.14.0
-  firebase_messaging: ^16.6.0
-  firebase_analytics: ^12.5.0
-  firebase_crashlytics: ^5.3.0
+  firebase_core: ^4.15.0
+  firebase_messaging: ^16.7.0
+  firebase_analytics: ^12.6.0
+  firebase_crashlytics: ^5.4.0
   flutter_local_notifications: ^22.3.0
   url_launcher: ^6.3.2
   google_fonts: ^8.2.1
