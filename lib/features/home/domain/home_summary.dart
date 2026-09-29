@@ -1,5 +1,12 @@
 import 'package:flutter/foundation.dart';
 
+/// `cover_image_url` of a content item: an absolute URL from the backend,
+/// `null` when the item has no cover.
+Uri? _coverUrl(Map<String, dynamic> json) {
+  final url = json['cover_image_url'] as String?;
+  return url == null || url.isEmpty ? null : Uri.tryParse(url);
+}
+
 /// A meditation of the home feed (backend `MeditationResource`).
 @immutable
 class HomeMeditation {
@@ -8,6 +15,7 @@ class HomeMeditation {
     required this.title,
     required this.shortDescription,
     required this.durationSeconds,
+    this.coverImageUrl,
     this.isLocked = false,
   });
 
@@ -17,6 +25,7 @@ class HomeMeditation {
       title: json['title'] as String? ?? '',
       shortDescription: json['short_description'] as String? ?? '',
       durationSeconds: (json['duration_seconds'] as num?)?.toInt() ?? 0,
+      coverImageUrl: _coverUrl(json),
       isLocked: json['is_locked'] as bool? ?? false,
     );
   }
@@ -25,6 +34,7 @@ class HomeMeditation {
   final String title;
   final String shortDescription;
   final int durationSeconds;
+  final Uri? coverImageUrl;
   final bool isLocked;
 }
 
@@ -36,6 +46,7 @@ class HomeTool {
     required this.title,
     required this.shortDescription,
     this.stageTag,
+    this.coverImageUrl,
     this.isLocked = false,
   });
 
@@ -45,6 +56,7 @@ class HomeTool {
       title: json['title'] as String? ?? '',
       shortDescription: json['short_description'] as String? ?? '',
       stageTag: json['stage_tag'] as String?,
+      coverImageUrl: _coverUrl(json),
       isLocked: json['is_locked'] as bool? ?? false,
     );
   }
@@ -55,6 +67,7 @@ class HomeTool {
 
   /// Stage of the Process the tool belongs to, e.g. `выражение`.
   final String? stageTag;
+  final Uri? coverImageUrl;
   final bool isLocked;
 }
 
@@ -66,6 +79,7 @@ class HomeTopic {
     required this.title,
     required this.subtitle,
     this.fullDescription,
+    this.coverImageUrl,
     this.isLocked = false,
   });
 
@@ -75,6 +89,7 @@ class HomeTopic {
       title: json['title'] as String? ?? '',
       subtitle: json['subtitle'] as String? ?? '',
       fullDescription: json['full_description'] as String?,
+      coverImageUrl: _coverUrl(json),
       isLocked: json['is_locked'] as bool? ?? false,
     );
   }
@@ -85,6 +100,7 @@ class HomeTopic {
 
   /// `null` for a locked topic: the backend withholds it.
   final String? fullDescription;
+  final Uri? coverImageUrl;
   final bool isLocked;
 }
 
@@ -95,25 +111,17 @@ class HomeArticle {
     required this.id,
     required this.title,
     required this.shortDescription,
-    this.coverUrl,
+    this.coverImageUrl,
     this.publishedAt,
     this.isLocked = false,
   });
 
-  /// [storageBaseUrl] resolves the backend's relative `cover_image_path`
-  /// (a path on its public disk, e.g. `articles/x.jpg`).
-  factory HomeArticle.fromJson(
-    Map<String, dynamic> json, {
-    required Uri storageBaseUrl,
-  }) {
-    final coverPath = json['cover_image_path'] as String?;
+  factory HomeArticle.fromJson(Map<String, dynamic> json) {
     return HomeArticle(
       id: (json['id'] as num).toInt(),
       title: json['title'] as String? ?? '',
       shortDescription: json['short_description'] as String? ?? '',
-      coverUrl: coverPath == null || coverPath.isEmpty
-          ? null
-          : storageBaseUrl.resolve(coverPath),
+      coverImageUrl: _coverUrl(json),
       publishedAt: DateTime.tryParse(json['published_at'] as String? ?? ''),
       isLocked: json['is_locked'] as bool? ?? false,
     );
@@ -122,7 +130,7 @@ class HomeArticle {
   final int id;
   final String title;
   final String shortDescription;
-  final Uri? coverUrl;
+  final Uri? coverImageUrl;
   final DateTime? publishedAt;
   final bool isLocked;
 }
@@ -162,6 +170,36 @@ class DiaryProgress {
   }
 }
 
+/// A content section as the backend returns it: `{featured, items}`.
+///
+/// [featured] is the item picked in the admin (`is_featured`) to head the
+/// section, `null` when none is; [items] are the rest, never repeating
+/// [featured].
+@immutable
+class HomeSection<T> {
+  const HomeSection({this.featured, this.items = const []});
+
+  /// A missing or malformed section is an empty one.
+  factory HomeSection.fromJson(
+    Object? json,
+    T Function(Map<String, dynamic>) parse,
+  ) {
+    if (json is! Map<String, dynamic>) return HomeSection<T>();
+    final featured = json['featured'];
+    final items = json['items'] as List<dynamic>? ?? const [];
+    return HomeSection<T>(
+      featured: featured is Map<String, dynamic> ? parse(featured) : null,
+      items: [for (final item in items) parse(item as Map<String, dynamic>)],
+    );
+  }
+
+  final T? featured;
+  final List<T> items;
+
+  /// Neither a featured item nor any other.
+  bool get isEmpty => featured == null && items.isEmpty;
+}
+
 /// `GET /home`: a handful of items per content section plus the diary
 /// progress.
 @immutable
@@ -174,32 +212,24 @@ class HomeSummary {
     required this.diary,
   });
 
-  factory HomeSummary.fromJson(
-    Map<String, dynamic> json, {
-    required Uri storageBaseUrl,
-  }) {
-    List<T> list<T>(String key, T Function(Map<String, dynamic>) parse) {
-      final items = json[key] as List<dynamic>? ?? const [];
-      return [for (final item in items) parse(item as Map<String, dynamic>)];
-    }
-
+  factory HomeSummary.fromJson(Map<String, dynamic> json) {
     return HomeSummary(
-      meditations: list('meditations', HomeMeditation.fromJson),
-      tools: list('tools', HomeTool.fromJson),
-      topics: list('topics', HomeTopic.fromJson),
-      articles: list(
-        'articles',
-        (j) => HomeArticle.fromJson(j, storageBaseUrl: storageBaseUrl),
+      meditations: HomeSection.fromJson(
+        json['meditations'],
+        HomeMeditation.fromJson,
       ),
+      tools: HomeSection.fromJson(json['tools'], HomeTool.fromJson),
+      topics: HomeSection.fromJson(json['topics'], HomeTopic.fromJson),
+      articles: HomeSection.fromJson(json['articles'], HomeArticle.fromJson),
       diary: DiaryProgress.fromJson(
         json['diary_progress'] as Map<String, dynamic>?,
       ),
     );
   }
 
-  final List<HomeMeditation> meditations;
-  final List<HomeTool> tools;
-  final List<HomeTopic> topics;
-  final List<HomeArticle> articles;
+  final HomeSection<HomeMeditation> meditations;
+  final HomeSection<HomeTool> tools;
+  final HomeSection<HomeTopic> topics;
+  final HomeSection<HomeArticle> articles;
   final DiaryProgress diary;
 }

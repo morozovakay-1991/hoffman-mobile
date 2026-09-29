@@ -41,7 +41,7 @@ void main() {
         HomeText.articles,
       ]);
 
-      // The first item of each section is highlighted, the rest are the
+      // The featured item of each section is highlighted, the rest are the
       // core/widgets content cards.
       final featured = tester
           .widgetList<HomeFeaturedItem>(find.byType(HomeFeaturedItem))
@@ -210,12 +210,11 @@ void main() {
         tester,
         homeEnv({
           getHome: homeResponse(
-            meditations: [
-              meditationJson(1, 'Открытая'),
+            meditations: sectionJson(meditationJson(1, 'Открытая'), [
               meditationJson(2, 'Закрытая', isLocked: true),
-            ],
-            tools: [toolJson(11, 'Закрытый', isLocked: true)],
-            topics: [topicJson(21, 'Открытая тема')],
+            ]),
+            tools: sectionJson(toolJson(11, 'Закрытый', isLocked: true)),
+            topics: sectionJson(topicJson(21, 'Открытая тема')),
           ),
         }),
       );
@@ -239,10 +238,10 @@ void main() {
         tester,
         homeEnv({
           getHome: homeResponse(
-            meditations: [],
-            tools: [],
-            topics: [],
-            articles: [],
+            meditations: sectionJson(null),
+            tools: sectionJson(null),
+            topics: sectionJson(null),
+            articles: sectionJson(null),
           ),
         }),
       );
@@ -263,6 +262,193 @@ void main() {
           findsOneWidget,
         );
       }
+    });
+  });
+
+  group('featured item', () {
+    const cover = 'https://api.example.com/storage/covers/featured.jpg';
+
+    HomeSectionCover sectionCover(WidgetTester tester, String title) =>
+        tester.widget<HomeSectionCover>(
+          find.byWidgetPredicate(
+            (w) => w is HomeSectionCover && w.title == title,
+            skipOffstage: false,
+          ),
+        );
+
+    testWidgets('the section cover shows the featured item cover', (
+      tester,
+    ) async {
+      await pumpApp(
+        tester,
+        homeEnv({
+          getHome: homeResponse(
+            meditations: sectionJson(
+              meditationJson(1, 'Заглавная', coverImageUrl: cover),
+            ),
+            tools: sectionJson(toolJson(11, 'Заглавный', coverImageUrl: cover)),
+            topics: sectionJson(
+              topicJson(21, 'Заглавная', coverImageUrl: cover),
+            ),
+            articles: sectionJson(
+              articleJson(31, 'Заглавная', coverImageUrl: cover),
+            ),
+          ),
+        }),
+      );
+
+      for (final title in [
+        HomeText.meditations,
+        HomeText.tools,
+        HomeText.topics,
+        HomeText.articles,
+      ]) {
+        expect(sectionCover(tester, title).imageUrl, Uri.parse(cover));
+      }
+      // The diary has no featured item: always the stock image.
+      expect(sectionCover(tester, HomeText.diary).imageUrl, isNull);
+    });
+
+    testWidgets('an unloadable cover falls back to the stock image', (
+      tester,
+    ) async {
+      // Test HTTP answers 400 to every request.
+      await pumpApp(
+        tester,
+        homeEnv({
+          getHome: homeResponse(
+            meditations: sectionJson(
+              meditationJson(1, 'Заглавная', coverImageUrl: cover),
+            ),
+          ),
+        }),
+      );
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 100)),
+      );
+      await tester.pumpAndSettle();
+
+      final images = find.descendant(
+        of: find.byWidgetPredicate(
+          (w) => w is HomeSectionCover && w.title == HomeText.meditations,
+        ),
+        matching: find.byType(Image),
+      );
+      expect(
+        tester.widgetList<Image>(images).map((i) => i.image),
+        contains(const AssetImage(HomeScreen.meditationsCover)),
+      );
+    });
+
+    group('the cover opens the featured item', () {
+      for (final (section, route) in [
+        (AppRoutes.meditations, AppRoutes.meditation(1)),
+        (AppRoutes.tools, AppRoutes.tool(11)),
+        (AppRoutes.topics, AppRoutes.topic(21)),
+        (AppRoutes.articles, AppRoutes.article(31)),
+      ]) {
+        testWidgets(section, (tester) async {
+          final container = await pumpApp(tester, homeEnv());
+
+          await tapAndSettle(tester, find.byKey(HomeScreen.coverKey(section)));
+
+          expect(currentPath(container), route);
+        });
+      }
+    });
+
+    testWidgets('without a featured item: no highlighted block, every item '
+        'is a card and the cover is the stock image, not tappable', (
+      tester,
+    ) async {
+      final container = await pumpApp(
+        tester,
+        homeEnv({
+          getHome: homeResponse(
+            meditations: sectionJson(null, [
+              meditationJson(1, 'Первая', coverImageUrl: cover),
+              meditationJson(2, 'Вторая'),
+            ]),
+          ),
+        }),
+      );
+
+      final featured = tester
+          .widgetList<HomeFeaturedItem>(
+            find.byType(HomeFeaturedItem, skipOffstage: false),
+          )
+          .map((f) => f.title);
+      expect(featured, isNot(contains('Первая')));
+      expect(featured, hasLength(3));
+      expect(
+        tester
+            .widgetList<MeditationCard>(
+              find.byType(MeditationCard, skipOffstage: false),
+            )
+            .map((c) => c.title),
+        ['Первая', 'Вторая'],
+      );
+      expect(find.text(HomeText.sectionEmpty), findsNothing);
+
+      final meditations = sectionCover(tester, HomeText.meditations);
+      expect(meditations.imageUrl, isNull);
+      expect(meditations.onTap, isNull);
+      expect(
+        find.byKey(HomeScreen.coverKey(AppRoutes.meditations)),
+        findsNothing,
+      );
+
+      await tester.tap(find.text(HomeText.meditationsSubtitle));
+      await tester.pumpAndSettle();
+      expect(currentPath(container), AppRoutes.home);
+
+      // "все" still leads to the list.
+      await tapAndSettle(
+        tester,
+        find.byKey(HomeScreen.seeAllKey(AppRoutes.meditations)),
+      );
+      expect(currentPath(container), AppRoutes.meditations);
+    });
+
+    testWidgets('only a featured item: no cards, no empty message', (
+      tester,
+    ) async {
+      await pumpApp(
+        tester,
+        homeEnv({
+          getHome: homeResponse(
+            meditations: sectionJson(meditationJson(1, 'Единственная')),
+          ),
+        }),
+      );
+
+      expect(find.byType(MeditationCard, skipOffstage: false), findsNothing);
+      expect(find.text(HomeText.sectionEmpty), findsNothing);
+      expect(
+        tester
+            .widget<HomeFeaturedItem>(find.byType(HomeFeaturedItem).first)
+            .title,
+        'Единственная',
+      );
+    });
+
+    testWidgets('list cards show their own covers', (tester) async {
+      await pumpApp(
+        tester,
+        homeEnv({
+          getHome: homeResponse(
+            meditations: sectionJson(null, [
+              meditationJson(2, 'С обложкой', coverImageUrl: cover),
+            ]),
+          ),
+        }),
+      );
+
+      final card = tester.widget<MeditationCard>(
+        find.byType(MeditationCard, skipOffstage: false),
+      );
+      expect(card.cover, isA<HomeCoverImage>());
+      expect((card.cover as HomeCoverImage).url, Uri.parse(cover));
     });
   });
 

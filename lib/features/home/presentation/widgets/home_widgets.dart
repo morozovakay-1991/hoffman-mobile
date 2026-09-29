@@ -4,11 +4,39 @@ import 'package:hoffman/core/widgets/index.dart';
 import 'package:hoffman/features/home/presentation/home_text.dart';
 
 // Building blocks of the home screen (Figma 612:7209): the promo cover that
-// opens every section, the highlighted first item under it and the diary
-// progress panel.
+// opens every section, the featured item under it and the diary progress
+// panel.
+
+/// A content cover loaded from [url], or the bundled [fallback] image when
+/// there is no URL or it cannot be loaded (e.g. offline).
+class HomeCoverImage extends StatelessWidget {
+  const HomeCoverImage({required this.url, required this.fallback, super.key});
+
+  final Uri? url;
+
+  /// Asset path of the section's stock image.
+  final String fallback;
+
+  @override
+  Widget build(BuildContext context) {
+    final asset = Image.asset(fallback, fit: BoxFit.cover);
+    final url = this.url;
+    if (url == null) return asset;
+
+    return Image.network(
+      url.toString(),
+      fit: BoxFit.cover,
+      errorBuilder: (_, _, _) => asset,
+    );
+  }
+}
 
 /// Section promo cover, e.g. `Медитации` (612:7219): a 350px image with the
 /// section title, the `все` badge leading to the full list, and a subtitle.
+///
+/// The image is the cover of the section's featured item ([imageUrl]),
+/// falling back to the stock [image]. With [onTap] the cover opens that
+/// item; the `все` badge keeps leading to the list.
 class HomeSectionCover extends StatelessWidget {
   const HomeSectionCover({
     required this.image,
@@ -16,6 +44,10 @@ class HomeSectionCover extends StatelessWidget {
     required this.subtitle,
     required this.onSeeAll,
     super.key,
+    this.imageUrl,
+    this.onTap,
+    this.tapLabel,
+    this.coverKey,
     this.seeAllKey,
     this.foreground = AppColors.background,
     this.shaded = false,
@@ -32,10 +64,19 @@ class HomeSectionCover extends StatelessWidget {
   /// Top of the 30% black gradient behind white text (612:7219).
   static const Color _shade = Color(0x4D000000);
 
+  /// Asset path of the stock image.
   final String image;
+  final Uri? imageUrl;
   final String title;
   final String subtitle;
   final VoidCallback onSeeAll;
+
+  /// Opens the featured item; `null` leaves the cover inert.
+  final VoidCallback? onTap;
+
+  /// Screen reader label of [onTap], e.g. the featured item's title.
+  final String? tapLabel;
+  final Key? coverKey;
   final Key? seeAllKey;
 
   /// Title and subtitle color: white on the dark covers, black on the light
@@ -48,13 +89,23 @@ class HomeSectionCover extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final onTap = this.onTap;
 
-    return SizedBox(
+    final cover = SizedBox(
       height: height,
       child: Stack(
         fit: StackFit.expand,
         children: [
-          Image.asset(image, fit: BoxFit.cover),
+          HomeCoverImage(url: imageUrl, fallback: image),
+          if (onTap != null)
+            // The gesture is on the whole cover (below); this node only
+            // exposes it to screen readers apart from the title and badge.
+            Semantics(
+              button: true,
+              label: tapLabel,
+              onTap: onTap,
+              child: const SizedBox.expand(),
+            ),
           if (shaded)
             const DecoratedBox(
               decoration: BoxDecoration(
@@ -118,10 +169,20 @@ class HomeSectionCover extends StatelessWidget {
         ],
       ),
     );
+    if (onTap == null) return cover;
+
+    // Outside the badge, whose own tap wins inside it.
+    return GestureDetector(
+      key: coverKey,
+      behavior: HitTestBehavior.opaque,
+      excludeFromSemantics: true,
+      onTap: onTap,
+      child: cover,
+    );
   }
 }
 
-/// The highlighted first item of a section, e.g. `Утренняя медитация`
+/// The featured item of a section, e.g. `Утренняя медитация`
 /// (612:7228) or `Распознавание паттернов` (612:7751): a tinted panel with
 /// the title, the description next to a [trailing] detail (duration, date,
 /// stage badge) and a 130px action button.

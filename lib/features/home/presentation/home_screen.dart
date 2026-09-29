@@ -15,8 +15,8 @@ import 'package:hoffman/features/home/presentation/widgets/home_widgets.dart';
 /// The header greets the user by name; below it, from top to bottom:
 /// meditations, tools, topics, the 100-day diary and articles. Each section
 /// opens with a promo cover whose `все` badge leads to the full list, then
-/// highlights its first item and lists the rest with the `core/widgets`
-/// content cards. Everything comes from a single `GET /home`.
+/// highlights its featured item (chosen in the admin; the cover shows and
+/// opens it too) and lists the rest with the `core/widgets` content cards. Everything comes from a single `GET /home`.
 ///
 /// The diary block trusts the backend's `is_available` alone: the progress
 /// and "Продолжить" are shown only to users the backend lets in.
@@ -29,6 +29,9 @@ class HomeScreen extends ConsumerWidget {
   static const Key diaryLockedKey = ValueKey('home-diary-locked');
 
   static Key seeAllKey(String route) => ValueKey('home-see-all-$route');
+
+  /// The cover of a section with a featured item, which opens that item.
+  static Key coverKey(String route) => ValueKey('home-cover-$route');
 
   static const String meditationsCover =
       'assets/images/home/meditations_cover.png';
@@ -247,122 +250,136 @@ const EdgeInsets _listCardPadding = EdgeInsets.symmetric(
 );
 
 class _MeditationsSection extends StatelessWidget {
-  const _MeditationsSection(this.items);
+  const _MeditationsSection(this.section);
 
-  final List<HomeMeditation> items;
+  final HomeSection<HomeMeditation> section;
 
   @override
   Widget build(BuildContext context) {
+    final featured = section.featured;
+    void open(HomeMeditation item) =>
+        context.push(AppRoutes.meditation(item.id));
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         HomeSectionCover(
           image: HomeScreen.meditationsCover,
+          imageUrl: featured?.coverImageUrl,
           title: HomeText.meditations,
           subtitle: HomeText.meditationsSubtitle,
+          coverKey: HomeScreen.coverKey(AppRoutes.meditations),
           seeAllKey: HomeScreen.seeAllKey(AppRoutes.meditations),
           shaded: true,
+          tapLabel: featured?.title,
+          onTap: featured == null ? null : () => open(featured),
           onSeeAll: () => context.go(AppRoutes.meditations),
         ),
-        if (items.isEmpty) const HomeSectionEmpty(),
-        for (final (i, item) in items.indexed)
-          if (i == 0)
-            HomeFeaturedItem(
-              title: item.title,
-              description: item.shortDescription,
-              trailing: HomeMetaLabel(
-                icon: Icons.watch_later,
-                text: HomeText.duration(item.durationSeconds),
-              ),
-              actionLabel: HomeText.start,
-              actionIcon: Icons.play_arrow_rounded,
-              isLocked: item.isLocked,
-              onTap: () => context.push(AppRoutes.meditation(item.id)),
-            )
-          else ...[
-            const HomeDivider(),
-            Padding(
-              padding: _cardPadding,
-              child: MeditationCard(
-                title: item.title,
-                cover: Image.asset(
-                  HomeScreen.meditationsCover,
-                  fit: BoxFit.cover,
-                ),
-                duration: HomeText.duration(item.durationSeconds),
-                description: item.shortDescription,
-                actionLabel: HomeText.start,
-                isLocked: item.isLocked,
-                onTap: () => context.push(AppRoutes.meditation(item.id)),
-              ),
+        if (section.isEmpty) const HomeSectionEmpty(),
+        if (featured != null)
+          HomeFeaturedItem(
+            title: featured.title,
+            description: featured.shortDescription,
+            trailing: HomeMetaLabel(
+              icon: Icons.watch_later,
+              text: HomeText.duration(featured.durationSeconds),
             ),
-          ],
+            actionLabel: HomeText.start,
+            actionIcon: Icons.play_arrow_rounded,
+            isLocked: featured.isLocked,
+            onTap: () => open(featured),
+          ),
+        for (final (i, item) in section.items.indexed) ...[
+          // No line above the first card when it heads the section.
+          if (featured != null || i > 0) const HomeDivider(),
+          Padding(
+            padding: _cardPadding,
+            child: MeditationCard(
+              title: item.title,
+              cover: HomeCoverImage(
+                url: item.coverImageUrl,
+                fallback: HomeScreen.meditationsCover,
+              ),
+              duration: HomeText.duration(item.durationSeconds),
+              description: item.shortDescription,
+              actionLabel: HomeText.start,
+              isLocked: item.isLocked,
+              onTap: () => open(item),
+            ),
+          ),
+        ],
       ],
     );
   }
 }
 
 class _ToolsSection extends StatelessWidget {
-  const _ToolsSection(this.items);
+  const _ToolsSection(this.section);
 
-  final List<HomeTool> items;
+  final HomeSection<HomeTool> section;
 
   @override
   Widget build(BuildContext context) {
+    final featured = section.featured;
+    void open(HomeTool item) => context.push(AppRoutes.tool(item.id));
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         HomeSectionCover(
           image: HomeScreen.toolsCover,
+          imageUrl: featured?.coverImageUrl,
           title: HomeText.tools,
           subtitle: HomeText.toolsSubtitle,
+          coverKey: HomeScreen.coverKey(AppRoutes.tools),
           seeAllKey: HomeScreen.seeAllKey(AppRoutes.tools),
           foreground: AppColors.basicBlack,
+          tapLabel: featured?.title,
+          onTap: featured == null ? null : () => open(featured),
           onSeeAll: () => context.go(AppRoutes.tools),
         ),
-        if (items.isEmpty) const HomeSectionEmpty(),
-        for (final (i, item) in items.indexed)
-          if (i == 0)
-            HomeFeaturedItem(
+        if (section.isEmpty) const HomeSectionEmpty(),
+        if (featured != null)
+          HomeFeaturedItem(
+            title: featured.title,
+            description: featured.shortDescription,
+            trailing: featured.stageTag == null
+                ? null
+                : AppBadge(
+                    label: featured.stageTag!,
+                    variant: AppBadgeVariant.tinted,
+                  ),
+            actionLabel: HomeText.read,
+            color: AppColors.blueTint,
+            actionVariant: AppButtonVariant.secondary,
+            isLocked: featured.isLocked,
+            onTap: () => open(featured),
+          ),
+        for (final item in section.items)
+          Padding(
+            padding: _listCardPadding,
+            child: ToolListCard(
               title: item.title,
               description: item.shortDescription,
-              trailing: item.stageTag == null
-                  ? null
-                  : AppBadge(
-                      label: item.stageTag!,
-                      variant: AppBadgeVariant.tinted,
-                    ),
+              tag: item.stageTag,
               actionLabel: HomeText.read,
-              color: AppColors.blueTint,
-              actionVariant: AppButtonVariant.secondary,
               isLocked: item.isLocked,
-              onTap: () => context.push(AppRoutes.tool(item.id)),
-            )
-          else
-            Padding(
-              padding: _listCardPadding,
-              child: ToolListCard(
-                title: item.title,
-                description: item.shortDescription,
-                tag: item.stageTag,
-                actionLabel: HomeText.read,
-                isLocked: item.isLocked,
-                onTap: () => context.push(AppRoutes.tool(item.id)),
-              ),
+              onTap: () => open(item),
             ),
+          ),
       ],
     );
   }
 }
 
 class _TopicsSection extends StatefulWidget {
-  const _TopicsSection(this.items);
+  const _TopicsSection(this.section);
 
   /// Panel under the featured topic (612:7552): 10% black, off the token
   /// scale.
   static const Color featuredColor = Color(0x1A000000);
 
-  final List<HomeTopic> items;
+  final HomeSection<HomeTopic> section;
 
   @override
   State<_TopicsSection> createState() => _TopicsSectionState();
@@ -374,48 +391,56 @@ class _TopicsSectionState extends State<_TopicsSection> {
 
   @override
   Widget build(BuildContext context) {
-    final items = widget.items;
+    final section = widget.section;
+    final featured = section.featured;
+    void open(HomeTopic item) => context.push(AppRoutes.topic(item.id));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         HomeSectionCover(
           image: HomeScreen.topicsCover,
+          imageUrl: featured?.coverImageUrl,
           title: HomeText.topics,
           subtitle: HomeText.topicsSubtitle,
+          coverKey: HomeScreen.coverKey(AppRoutes.topics),
           seeAllKey: HomeScreen.seeAllKey(AppRoutes.topics),
+          tapLabel: featured?.title,
+          onTap: featured == null ? null : () => open(featured),
           // Topics is not a tab: pushed, so back returns home.
           onSeeAll: () => context.push(AppRoutes.topics),
         ),
-        if (items.isEmpty) const HomeSectionEmpty(),
-        for (final (i, item) in items.indexed)
-          if (i == 0)
-            HomeFeaturedItem(
+        if (section.isEmpty) const HomeSectionEmpty(),
+        if (featured != null)
+          HomeFeaturedItem(
+            title: featured.title,
+            subtitle: featured.subtitle,
+            description: featured.fullDescription ?? '',
+            actionLabel: HomeText.read,
+            color: _TopicsSection.featuredColor,
+            isLocked: featured.isLocked,
+            onTap: () => open(featured),
+          ),
+        for (final item in section.items)
+          Padding(
+            padding: _listCardPadding,
+            child: ThemeListCard(
               title: item.title,
               subtitle: item.subtitle,
-              description: item.fullDescription ?? '',
-              actionLabel: HomeText.read,
-              color: _TopicsSection.featuredColor,
-              isLocked: item.isLocked,
-              onTap: () => context.push(AppRoutes.topic(item.id)),
-            )
-          else
-            Padding(
-              padding: _listCardPadding,
-              child: ThemeListCard(
-                title: item.title,
-                subtitle: item.subtitle,
-                cover: Image.asset(HomeScreen.topicsCover, fit: BoxFit.cover),
-                body: item.fullDescription ?? '',
-                actionLabel: HomeText.read,
-                isExpanded: _expandedId == item.id,
-                isLocked: item.isLocked,
-                onTap: () => setState(
-                  () => _expandedId = _expandedId == item.id ? null : item.id,
-                ),
-                onActionTap: () => context.push(AppRoutes.topic(item.id)),
+              cover: HomeCoverImage(
+                url: item.coverImageUrl,
+                fallback: HomeScreen.topicsCover,
               ),
+              body: item.fullDescription ?? '',
+              actionLabel: HomeText.read,
+              isExpanded: _expandedId == item.id,
+              isLocked: item.isLocked,
+              onTap: () => setState(
+                () => _expandedId = _expandedId == item.id ? null : item.id,
+              ),
+              onActionTap: () => open(item),
             ),
+          ),
       ],
     );
   }
@@ -531,77 +556,62 @@ class _DiaryLocked extends ConsumerWidget {
 }
 
 class _ArticlesSection extends StatelessWidget {
-  const _ArticlesSection(this.items);
+  const _ArticlesSection(this.section);
 
-  final List<HomeArticle> items;
+  final HomeSection<HomeArticle> section;
 
   @override
   Widget build(BuildContext context) {
+    final featured = section.featured;
+    void open(HomeArticle item) => context.push(AppRoutes.article(item.id));
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         HomeSectionCover(
           image: HomeScreen.articlesCover,
+          imageUrl: featured?.coverImageUrl,
           title: HomeText.articles,
           subtitle: HomeText.articlesSubtitle,
+          coverKey: HomeScreen.coverKey(AppRoutes.articles),
           seeAllKey: HomeScreen.seeAllKey(AppRoutes.articles),
+          tapLabel: featured?.title,
+          onTap: featured == null ? null : () => open(featured),
           onSeeAll: () => context.go(AppRoutes.articles),
         ),
-        if (items.isEmpty) const HomeSectionEmpty(),
-        for (final (i, item) in items.indexed)
-          if (i == 0)
-            HomeFeaturedItem(
+        if (section.isEmpty) const HomeSectionEmpty(),
+        if (featured != null)
+          HomeFeaturedItem(
+            title: featured.title,
+            description: featured.shortDescription,
+            trailing: featured.publishedAt == null
+                ? null
+                : HomeMetaLabel(
+                    icon: Icons.calendar_month,
+                    text: HomeText.monthYear(featured.publishedAt),
+                  ),
+            actionLabel: HomeText.read,
+            color: AppColors.lightBlueTint,
+            isLocked: featured.isLocked,
+            onTap: () => open(featured),
+          ),
+        for (final item in section.items)
+          Padding(
+            padding: _listCardPadding,
+            child: ArticleListCard(
               title: item.title,
-              description: item.shortDescription,
-              trailing: item.publishedAt == null
-                  ? null
-                  : HomeMetaLabel(
-                      icon: Icons.calendar_month,
-                      text: HomeText.monthYear(item.publishedAt),
-                    ),
-              actionLabel: HomeText.read,
-              color: AppColors.lightBlueTint,
-              isLocked: item.isLocked,
-              onTap: () => context.push(AppRoutes.article(item.id)),
-            )
-          else
-            Padding(
-              padding: _listCardPadding,
-              child: ArticleListCard(
-                title: item.title,
-                cover: _ArticleCover(item.coverUrl),
-                date: HomeText.monthYear(item.publishedAt),
-                description: item.shortDescription,
-                actionLabel: HomeText.read,
-                isLocked: item.isLocked,
-                onTap: () => context.push(AppRoutes.article(item.id)),
+              cover: HomeCoverImage(
+                url: item.coverImageUrl,
+                fallback: HomeScreen.articlesCover,
               ),
+              date: HomeText.monthYear(item.publishedAt),
+              description: item.shortDescription,
+              actionLabel: HomeText.read,
+              isLocked: item.isLocked,
+              onTap: () => open(item),
             ),
+          ),
       ],
-    );
-  }
-}
-
-/// The article's own cover, or the section image when it has none or it
-/// cannot be loaded (e.g. offline).
-class _ArticleCover extends StatelessWidget {
-  const _ArticleCover(this.url);
-
-  final Uri? url;
-
-  @override
-  Widget build(BuildContext context) {
-    const fallback = Image(
-      image: AssetImage(HomeScreen.articlesCover),
-      fit: BoxFit.cover,
-    );
-    final url = this.url;
-    if (url == null) return fallback;
-
-    return Image.network(
-      url.toString(),
-      fit: BoxFit.cover,
-      errorBuilder: (_, _, _) => fallback,
     );
   }
 }
