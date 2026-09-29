@@ -13,17 +13,12 @@ class HomeRepository {
 
   final Dio _dio;
 
-  /// Where the backend serves its public disk (`storage:link`), against
-  /// which article cover paths are resolved.
-  Uri get _storageBaseUrl =>
-      Uri.parse(_dio.options.baseUrl).resolve('/storage/');
-
   /// The whole home screen in one request.
   Future<HomeSummary> fetch() async {
     try {
       final response = await _dio.get<Map<String, dynamic>>(_path);
       final data = response.data?['data'] as Map<String, dynamic>? ?? const {};
-      return HomeSummary.fromJson(data, storageBaseUrl: _storageBaseUrl);
+      return HomeSummary.fromJson(data);
     } on DioException catch (e) {
       throw ApiException.fromDio(e);
     }

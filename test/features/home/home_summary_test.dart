@@ -3,34 +3,51 @@ import 'package:hoffman/features/home/index.dart';
 
 import 'home_harness.dart';
 
-final Uri _storage = Uri.parse('https://api.example.com/storage/');
+const _cover = 'https://api.example.com/storage/covers/x.jpg';
 
 void main() {
   group('HomeSummary.fromJson', () {
-    test('parses every section and the diary progress', () {
+    test('parses every section as {featured, items} and the diary '
+        'progress', () {
       final body = homeResponse().body! as Map<String, Object?>;
       final summary = HomeSummary.fromJson(
         body['data']! as Map<String, dynamic>,
-        storageBaseUrl: _storage,
       );
 
-      expect(summary.meditations.map((m) => m.id), [1, 2]);
-      expect(summary.meditations.first.durationSeconds, 1500);
-      expect(summary.tools.first.stageTag, 'выражение');
-      expect(summary.topics.last.fullDescription, 'Текст темы: Границы');
-      expect(summary.articles.first.publishedAt, DateTime.utc(2025, 3, 10, 9));
+      expect(summary.meditations.featured?.id, 1);
+      expect(summary.meditations.items.map((m) => m.id), [2]);
+      expect(summary.meditations.featured?.durationSeconds, 1500);
+      expect(summary.tools.featured?.stageTag, 'выражение');
+      expect(summary.tools.items.map((t) => t.id), [12]);
+      expect(summary.topics.featured?.id, 21);
+      expect(
+        summary.topics.items.single.fullDescription,
+        'Текст темы: Границы',
+      );
+      expect(summary.articles.featured?.id, 31);
+      expect(
+        summary.articles.featured?.publishedAt,
+        DateTime.utc(2025, 3, 10, 9),
+      );
+      expect(summary.articles.items.map((a) => a.id), [32]);
       expect(summary.diary.isAvailable, isTrue);
       expect(summary.diary.currentDay, 25);
       expect(summary.diary.totalDays, 100);
     });
 
     test('missing sections are empty, a missing diary is closed', () {
-      final summary = HomeSummary.fromJson(const {}, storageBaseUrl: _storage);
+      final summary = HomeSummary.fromJson(const {});
 
-      expect(summary.meditations, isEmpty);
-      expect(summary.tools, isEmpty);
-      expect(summary.topics, isEmpty);
-      expect(summary.articles, isEmpty);
+      for (final section in [
+        summary.meditations,
+        summary.tools,
+        summary.topics,
+        summary.articles,
+      ]) {
+        expect(section.featured, isNull);
+        expect(section.items, isEmpty);
+        expect(section.isEmpty, isTrue);
+      }
       expect(summary.diary.isAvailable, isFalse);
       expect(summary.diary.progress, 0);
     });
@@ -47,21 +64,75 @@ void main() {
       expect(tool.stageTag, isNull);
     });
 
-    test('article cover paths resolve against the storage URL', () {
-      final article = HomeArticle.fromJson({
-        ...articleJson(1, 'Статья'),
-        'cover_image_path': 'articles/cover.jpg',
-      }, storageBaseUrl: _storage);
+    test('a section without a featured item keeps its items', () {
+      final section = HomeSection.fromJson(
+        sectionJson(null, [meditationJson(1, 'Первая')]),
+        HomeMeditation.fromJson,
+      );
+
+      expect(section.featured, isNull);
+      expect(section.items.single.id, 1);
+      expect(section.isEmpty, isFalse);
+      expect(
+        HomeSection.fromJson(
+          sectionJson(meditationJson(2, 'Заглавная')),
+          HomeMeditation.fromJson,
+        ).isEmpty,
+        isFalse,
+      );
+    });
+
+    test('a section in the old flat form is read as empty', () {
+      final summary = HomeSummary.fromJson({
+        'meditations': [meditationJson(1, 'Медитация')],
+      });
+
+      expect(summary.meditations.isEmpty, isTrue);
+    });
+
+    test('every item takes its cover_image_url as is', () {
+      final url = Uri.parse(_cover);
 
       expect(
-        article.coverUrl,
-        Uri.parse('https://api.example.com/storage/articles/cover.jpg'),
+        HomeMeditation.fromJson(
+          meditationJson(1, 'Медитация', coverImageUrl: _cover),
+        ).coverImageUrl,
+        url,
       );
       expect(
-        HomeArticle.fromJson(
-          articleJson(2, 'Без обложки', publishedAt: null),
-          storageBaseUrl: _storage,
-        ).coverUrl,
+        HomeTool.fromJson(toolJson(2, 'Инструмент', coverImageUrl: _cover))
+            .coverImageUrl,
+        url,
+      );
+      expect(
+        HomeTopic.fromJson(topicJson(3, 'Тема', coverImageUrl: _cover))
+            .coverImageUrl,
+        url,
+      );
+      expect(
+        HomeArticle.fromJson(articleJson(4, 'Статья', coverImageUrl: _cover))
+            .coverImageUrl,
+        url,
+      );
+    });
+
+    test('no or an empty cover_image_url means no cover', () {
+      expect(
+        HomeMeditation.fromJson(meditationJson(1, 'Медитация')).coverImageUrl,
+        isNull,
+      );
+      expect(
+        HomeTool.fromJson(toolJson(2, 'Инструмент')).coverImageUrl,
+        isNull,
+      );
+      expect(
+        HomeTopic.fromJson({...topicJson(3, 'Тема'), 'cover_image_url': ''})
+            .coverImageUrl,
+        isNull,
+      );
+      expect(
+        HomeArticle.fromJson(articleJson(4, 'Статья', publishedAt: null))
+            .coverImageUrl,
         isNull,
       );
     });
