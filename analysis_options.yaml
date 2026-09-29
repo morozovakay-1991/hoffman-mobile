@@ -19,3 +19,6 @@ linter:
   rules:
     # Generated barrel/index files are intentionally empty for now.
     public_member_api_docs: false
+    # Asks for Dart 3.13 `new(...)` constructors instead of `ClassName(...)`;
+    # the codebase keeps the named form.
+    unnecessary_type_name_in_constructor: false
