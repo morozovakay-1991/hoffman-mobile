@@ -142,6 +142,7 @@ class TestEnvironment {
     String? token,
     bool registrationEnabled = true,
     this.onboardingSeen = true,
+    this.extraOverrides = const [],
   }) : backend = backend ?? FakeBackend(),
        tokenStorage = FakeTokenStorage(token),
        flags = FakeFeatureFlags(registration: registrationEnabled);
@@ -150,6 +151,9 @@ class TestEnvironment {
   final FakeTokenStorage tokenStorage;
   final FakeFeatureFlags flags;
   final bool onboardingSeen;
+
+  /// Feature fakes on top of the ones above (e.g. the audio player).
+  final List<Override> extraOverrides;
 
   /// URLs opened through [externalUrlLauncherProvider].
   final List<Uri> launchedUrls = [];
@@ -173,6 +177,7 @@ class TestEnvironment {
         onLogout: () => ref.read(sessionExpiredProvider.notifier).notify(),
       ).dio;
     }),
+    ...extraOverrides,
   ];
 
   ProviderContainer createContainer() {

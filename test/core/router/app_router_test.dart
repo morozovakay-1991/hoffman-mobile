@@ -38,13 +38,13 @@ final Iterable<String> _placeholderRoutes = _protectedRoutes.where(
   (p) =>
       p != AppRoutes.verification &&
       p != AppRoutes.home &&
+      !p.startsWith(AppRoutes.meditations) &&
       !p.startsWith(AppRoutes.profile),
 );
 
-/// Bottom tabs other than home, which needs the providers.
+/// Bottom tabs other than home and meditations, which need the providers.
 const _placeholderTabs = <String>[
   AppRoutes.articles,
-  AppRoutes.meditations,
   AppRoutes.tools,
   AppRoutes.diary,
 ];
@@ -159,7 +159,7 @@ void main() {
     tester,
   ) async {
     final router = createAppRouter(
-      initialLocation: AppRoutes.meditations,
+      initialLocation: AppRoutes.articles,
       readGuardState: () => _state(AuthStatus.signedIn),
     );
     addTearDown(router.dispose);
@@ -186,7 +186,7 @@ void main() {
   testWidgets('tab bar: five tabs in the mockup order, tapping one opens its '
       'section and marks it selected', (tester) async {
     final router = createAppRouter(
-      initialLocation: AppRoutes.meditations,
+      initialLocation: AppRoutes.articles,
       readGuardState: () => _state(AuthStatus.signedIn),
     );
     addTearDown(router.dispose);
@@ -202,9 +202,10 @@ void main() {
       'Инструменты',
       'Дневник',
     ]);
-    expect(bar.currentIndex, AppTab.meditations.index);
+    expect(bar.currentIndex, AppTab.articles.index);
 
-    for (final tab in [AppTab.articles, AppTab.tools, AppTab.diary]) {
+    // Meditations needs the providers; home_screen_test covers its tab.
+    for (final tab in [AppTab.tools, AppTab.diary, AppTab.articles]) {
       await tester.tap(find.bySemanticsLabel(tab.item.label));
       await tester.pumpAndSettle();
 
@@ -218,7 +219,7 @@ void main() {
 
   testWidgets('shows the :id path parameter on a detail route', (tester) async {
     final router = createAppRouter(
-      initialLocation: '/meditations/abc-123',
+      initialLocation: '/tools/abc-123',
       readGuardState: () => _state(AuthStatus.signedIn),
     );
     addTearDown(router.dispose);
