@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hoffman/core/router/app_routes.dart';
 import 'package:hoffman/core/theme/index.dart';
 import 'package:hoffman/features/auth/application/verification_controller.dart';
 import 'package:hoffman/features/auth/domain/auth_exception.dart';
 import 'package:hoffman/features/auth/domain/verification_request.dart';
 import 'package:hoffman/features/auth/presentation/auth_validators.dart';
+import 'package:hoffman/features/auth/presentation/verification/verification_flow.dart';
 import 'package:hoffman/features/auth/presentation/widgets/auth_widgets.dart';
 
 /// "Данные выпускника" — Figma 139:5303 (`Graduate info regidtratiom`).
@@ -18,7 +18,12 @@ import 'package:hoffman/features/auth/presentation/widgets/auth_widgets.dart';
 /// data of the user's previous request, so "Попробовать снова" only needs a
 /// correction.
 class GraduateFormScreen extends ConsumerStatefulWidget {
-  const GraduateFormScreen({super.key});
+  const GraduateFormScreen({
+    super.key,
+    this.flow = VerificationFlow.registration,
+  });
+
+  final VerificationFlow flow;
 
   static const Key lastNameFieldKey = ValueKey('graduate-last-name');
   static const Key firstNameFieldKey = ValueKey('graduate-first-name');
@@ -112,9 +117,7 @@ class _GraduateFormScreenState extends ConsumerState<GraduateFormScreen> {
           );
       if (!mounted) return;
       context.go(
-        request.isConfirmed
-            ? AppRoutes.verificationConfirmed
-            : AppRoutes.verificationNotConfirmed,
+        request.isConfirmed ? widget.flow.confirmed : widget.flow.notConfirmed,
       );
     } on AuthException catch (e) {
       if (mounted) _showError(e);
@@ -168,7 +171,7 @@ class _GraduateFormScreenState extends ConsumerState<GraduateFormScreen> {
       top: AuthBackBar(
         onBack: () => context.canPop()
             ? context.pop()
-            : context.go(AppRoutes.verification),
+            : context.go(widget.flow.formFallback),
       ),
       children: [
         const SizedBox(height: AppSpacing.xl),

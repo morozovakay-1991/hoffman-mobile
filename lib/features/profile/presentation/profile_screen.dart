@@ -191,7 +191,8 @@ class _GraduateBlock extends ConsumerWidget {
                       label: 'Начать',
                       variant: AppButtonVariant.secondary,
                       trailingIcon: Icons.arrow_forward,
-                      onPressed: () => context.push(AppRoutes.verification),
+                      onPressed: () =>
+                          context.push(AppRoutes.profileVerification),
                     ),
                   ),
                 ],

@@ -135,6 +135,8 @@ Future<bool> showConfirmSheet(
   // barrier (backdrop-blur 25px); showModalBottomSheet has no blur option.
   final confirmed = await showModalBottomSheet<bool>(
     context: context,
+    // Over the tab bar too, not just the screen it was opened from.
+    useRootNavigator: true,
     backgroundColor: AppColors.background,
     barrierColor: AppColors.grey,
     elevation: 0,

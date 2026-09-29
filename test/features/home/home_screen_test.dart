@@ -141,8 +141,12 @@ void main() {
             ),
             findsOneWidget,
           );
-          // Tab sections keep the bar; topics is pushed over it.
-          expect(find.byType(AppTabBar), isTab ? findsOneWidget : findsNothing);
+          // Every section keeps the bar; only the tab lists mark a tab.
+          expect(find.byType(AppTabBar), findsOneWidget);
+          expect(
+            tester.widget<AppTabBar>(find.byType(AppTabBar)).currentIndex,
+            isTab ? AppTab.of(route)!.index : -1,
+          );
         });
       }
     });

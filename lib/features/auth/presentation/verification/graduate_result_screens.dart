@@ -6,6 +6,7 @@ import 'package:hoffman/core/router/app_routes.dart';
 import 'package:hoffman/core/services/external_url_launcher.dart';
 import 'package:hoffman/core/theme/index.dart';
 import 'package:hoffman/core/widgets/index.dart';
+import 'package:hoffman/features/auth/presentation/verification/verification_flow.dart';
 import 'package:hoffman/features/auth/presentation/widgets/auth_widgets.dart';
 
 /// Gap between the heading and the buttons in 139:5307 / 139:5306.
@@ -48,7 +49,13 @@ class GraduateConfirmedScreen extends StatelessWidget {
 /// "Статус не подтвержден" — Figma 139:5306. Shown while the request waits
 /// for manual review (`pending`) or after it was `rejected`.
 class GraduateNotConfirmedScreen extends ConsumerWidget {
-  const GraduateNotConfirmedScreen({super.key});
+  const GraduateNotConfirmedScreen({
+    super.key,
+    this.flow = VerificationFlow.registration,
+  });
+
+  /// "Попробовать снова" reopens this flow's form.
+  final VerificationFlow flow;
 
   static const Key retryKey = ValueKey('graduate-retry');
   static const Key contactAdminKey = ValueKey('graduate-contact-admin');
@@ -80,7 +87,7 @@ class GraduateNotConfirmedScreen extends ConsumerWidget {
           key: retryKey,
           label: 'Попробовать снова',
           width: _wideButtonWidth,
-          onPressed: () => context.go(AppRoutes.verificationForm),
+          onPressed: () => context.go(flow.form),
         ),
         const SizedBox(height: AppSpacing.md),
         AuthSubmitButton(
