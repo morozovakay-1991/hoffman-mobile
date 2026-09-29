@@ -28,8 +28,8 @@ void main() {
       expect(find.textContaining('Подписк'), findsNothing);
     });
 
-    testWidgets('not verified: "Начать" opens the existing verification '
-        'flow', (tester) async {
+    testWidgets('not verified: "Начать" opens the verification form of the '
+        'profile flow (ТЗ 5.2.4)', (tester) async {
       final container = await openProfile(tester, profileEnv());
 
       expect(find.text('Выпускник Процесса Хоффмана?'), findsOneWidget);
@@ -40,8 +40,9 @@ void main() {
         find.byKey(ProfileScreen.startVerificationKey),
       );
 
-      expect(currentPath(container), AppRoutes.verification);
-      expect(find.byType(GraduateQuestionScreen), findsOneWidget);
+      expect(currentPath(container), AppRoutes.profileVerification);
+      expect(find.byType(GraduateFormScreen), findsOneWidget);
+      expect(find.byType(GraduateQuestionScreen), findsNothing);
     });
 
     for (final status in ['pending', 'rejected']) {

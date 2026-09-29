@@ -52,6 +52,19 @@ abstract final class AppRoutes {
   /// "Пароль" — Figma 642:3533.
   static const String profilePassword = '/profile/personal-data/password';
 
+  /// Graduate verification retried from the profile (ТЗ 5.2.4): the form —
+  /// Figma "Профиль" 131:2453. Same screens as [verificationForm] and the
+  /// results, but inside the tab shell.
+  static const String profileVerification = '/profile/verification';
+
+  /// "Статус подтвержден" from the profile — Figma "Профиль" 131:2408.
+  static const String profileVerificationConfirmed =
+      '/profile/verification/confirmed';
+
+  /// "Статус не подтвержден" from the profile — Figma "Профиль" 131:2429.
+  static const String profileVerificationNotConfirmed =
+      '/profile/verification/not-confirmed';
+
   /// "Удаление аккаунта" — Figma 755:3939.
   static const String profileDeleteAccount = '/profile/delete-account';
 

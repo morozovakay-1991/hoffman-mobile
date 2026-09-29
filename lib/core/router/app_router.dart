@@ -154,8 +154,10 @@ GoRouter createAppRouter({
         path: AppRoutes.verificationNotConfirmed,
         builder: (context, state) => const GraduateNotConfirmedScreen(),
       ),
-      // The bottom tabs. Content screens below are pushed over the shell,
-      // full screen.
+      // Everything signed-in users browse sits in the shell, above the tab
+      // bar (Figma "ui" and "Профиль"): the tab lists are switched with `go`,
+      // content and profile screens are `push`ed inside the shell. The
+      // player, full screen by design, is the only one left outside.
       ShellRoute(
         builder: (context, state, child) =>
             AppTabShell(location: state.uri.path, child: child),
@@ -168,69 +170,89 @@ GoRouter createAppRouter({
           _tabRoute(AppRoutes.meditations, const MeditationsScreen()),
           _tabRoute(AppRoutes.tools, const PlaceholderScreen(title: 'Tools')),
           _tabRoute(AppRoutes.diary, const PlaceholderScreen(title: 'Diary')),
+          GoRoute(
+            path: '/meditations/:id',
+            builder: (context, state) => MeditationDetailScreen(
+              id: int.tryParse(state.pathParameters['id']!),
+            ),
+          ),
+          _placeholderRoute('/tools/:id', 'Tool'),
+          _placeholderRoute(AppRoutes.topics, 'Topics'),
+          _placeholderRoute('/topics/:id', 'Topic'),
+          _placeholderRoute('/diary/:id', 'Diary entry'),
+          _placeholderRoute('/articles/:id', 'Article'),
+          // Profile. Flat siblings like the auth steps: every sub-screen is
+          // `push`ed, so back returns to wherever it was opened from. There
+          // is no subscription screen by design — subscriptions are managed
+          // on the website only.
+          GoRoute(
+            path: AppRoutes.profile,
+            builder: (context, state) => const ProfileScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.profilePersonalData,
+            builder: (context, state) => const PersonalDataScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.profileName,
+            builder: (context, state) => const EditNameScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.profileEmail,
+            builder: (context, state) => const EditEmailScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.profileEmailCode,
+            builder: (context, state) => const EmailCodeScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.profilePassword,
+            builder: (context, state) => const ChangePasswordScreen(),
+          ),
+          // Graduate verification retried from the profile (ТЗ 5.2.4): the
+          // `/verification` screens again, but with the bar and starting on
+          // the form. The post-registration flow stays outside the shell.
+          GoRoute(
+            path: AppRoutes.profileVerification,
+            builder: (context, state) =>
+                const GraduateFormScreen(flow: VerificationFlow.profile),
+          ),
+          GoRoute(
+            path: AppRoutes.profileVerificationConfirmed,
+            builder: (context, state) => const GraduateConfirmedScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.profileVerificationNotConfirmed,
+            builder: (context, state) => const GraduateNotConfirmedScreen(
+              flow: VerificationFlow.profile,
+            ),
+          ),
+          GoRoute(
+            path: AppRoutes.profileDeleteAccount,
+            builder: (context, state) => const DeleteAccountScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.profileNotifications,
+            builder: (context, state) => const NotificationsScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.profileLegal,
+            builder: (context, state) => const LegalDocumentsScreen(),
+          ),
+          GoRoute(
+            path: '${AppRoutes.profileLegal}/:slug',
+            builder: (context, state) =>
+                LegalDocumentScreen(slug: state.pathParameters['slug']!),
+          ),
         ],
       ),
-      GoRoute(
-        path: '/meditations/:id',
-        builder: (context, state) => MeditationDetailScreen(
-          id: int.tryParse(state.pathParameters['id']!),
-        ),
-      ),
+      // Pushed from the meditation (inside the shell) onto the root
+      // navigator, so it covers the tab bar.
       GoRoute(
         path: '/meditations/:id/player',
         builder: (context, state) => MeditationPlayerScreen(
           id: int.tryParse(state.pathParameters['id']!),
         ),
-      ),
-      _placeholderRoute('/tools/:id', 'Tool'),
-      _placeholderRoute(AppRoutes.topics, 'Topics'),
-      _placeholderRoute('/topics/:id', 'Topic'),
-      _placeholderRoute('/diary/:id', 'Diary entry'),
-      _placeholderRoute('/articles/:id', 'Article'),
-      // Profile. Flat siblings like the auth steps: every sub-screen is
-      // `push`ed, so back returns to wherever it was opened from. There is
-      // no subscription screen by design — subscriptions are managed on the
-      // website only.
-      GoRoute(
-        path: AppRoutes.profile,
-        builder: (context, state) => const ProfileScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.profilePersonalData,
-        builder: (context, state) => const PersonalDataScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.profileName,
-        builder: (context, state) => const EditNameScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.profileEmail,
-        builder: (context, state) => const EditEmailScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.profileEmailCode,
-        builder: (context, state) => const EmailCodeScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.profilePassword,
-        builder: (context, state) => const ChangePasswordScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.profileDeleteAccount,
-        builder: (context, state) => const DeleteAccountScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.profileNotifications,
-        builder: (context, state) => const NotificationsScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.profileLegal,
-        builder: (context, state) => const LegalDocumentsScreen(),
-      ),
-      GoRoute(
-        path: '${AppRoutes.profileLegal}/:slug',
-        builder: (context, state) =>
-            LegalDocumentScreen(slug: state.pathParameters['slug']!),
       ),
       GoRoute(
         path: AppRoutes.accountDeleted,

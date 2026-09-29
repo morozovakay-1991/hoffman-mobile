@@ -1,10 +1,17 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hoffman/core/router/index.dart';
 import 'package:hoffman/core/widgets/index.dart';
 import 'package:hoffman/features/auth/index.dart';
+import 'package:hoffman/features/home/index.dart';
+import 'package:hoffman/features/meditations/index.dart';
+import 'package:hoffman/features/profile/index.dart';
 
+import '../../features/home/home_harness.dart';
+import '../../features/meditations/meditations_harness.dart';
 import '../../helpers/app_harness.dart';
 
 const _protectedRoutes = <String>[
@@ -31,6 +38,9 @@ const _protectedRoutes = <String>[
   AppRoutes.profileNotifications,
   AppRoutes.profileLegal,
   '/profile/legal/privacy',
+  AppRoutes.profileVerification,
+  AppRoutes.profileVerificationConfirmed,
+  AppRoutes.profileVerificationNotConfirmed,
 ];
 
 /// Protected routes still served by [PlaceholderScreen].
@@ -41,13 +51,6 @@ final Iterable<String> _placeholderRoutes = _protectedRoutes.where(
       !p.startsWith(AppRoutes.meditations) &&
       !p.startsWith(AppRoutes.profile),
 );
-
-/// Bottom tabs other than home and meditations, which need the providers.
-const _placeholderTabs = <String>[
-  AppRoutes.articles,
-  AppRoutes.tools,
-  AppRoutes.diary,
-];
 
 const _authRoutes = <String>[
   AppRoutes.onboarding,
@@ -173,11 +176,12 @@ void main() {
 
       expect(router.routerDelegate.currentConfiguration.uri.path, path);
       expect(find.byType(PlaceholderScreen), findsOneWidget);
-      // The tab bar is on the tab lists only; content screens are full
-      // screen.
+      // Tab lists and content screens alike sit above the tab bar; a
+      // content screen marks the tab of its section.
+      expect(find.byType(AppTabBar), findsOneWidget, reason: path);
       expect(
-        find.byType(AppTabBar),
-        _placeholderTabs.contains(path) ? findsOneWidget : findsNothing,
+        tester.widget<AppTabBar>(find.byType(AppTabBar)).currentIndex,
+        AppTab.sectionOf(path)?.index ?? -1,
         reason: path,
       );
     }
@@ -215,6 +219,243 @@ void main() {
         tab.index,
       );
     }
+  });
+
+  test('AppTab.sectionOf: a tab list or a screen under it', () {
+    expect(AppTab.sectionOf(AppRoutes.meditations), AppTab.meditations);
+    expect(AppTab.sectionOf(AppRoutes.meditation(42)), AppTab.meditations);
+    expect(AppTab.sectionOf('/tools/42'), AppTab.tools);
+    expect(AppTab.sectionOf('/meditationsx'), isNull);
+    expect(AppTab.sectionOf(AppRoutes.profile), isNull);
+    expect(AppTab.sectionOf(AppRoutes.topics), isNull);
+    // `of` still matches the tab lists only.
+    expect(AppTab.of(AppRoutes.meditation(42)), isNull);
+  });
+
+  group('tab bar on the content and profile screens (Figma "ui", '
+      '"Профиль")', () {
+    AppTabBar bar(WidgetTester tester) =>
+        tester.widget<AppTabBar>(find.byType(AppTabBar));
+
+    testWidgets('profile (ТЗ 5.9.1) and its sub-screens keep the bar, with '
+        'no tab selected', (tester) async {
+      final container = await pumpApp(tester, MeditationsHarness().env);
+      final router = container.read(appRouterProvider);
+
+      await tapAndSettle(tester, find.byKey(HomeScreen.menuKey));
+      expect(currentPath(container), AppRoutes.profile);
+      expect(find.byType(ProfileScreen), findsOneWidget);
+      expect(find.byType(AppTabBar), findsOneWidget);
+      expect(bar(tester).currentIndex, -1);
+
+      for (final path in [
+        AppRoutes.profilePersonalData,
+        AppRoutes.profileName,
+        AppRoutes.profileNotifications,
+        AppRoutes.profileLegal,
+      ]) {
+        unawaited(router.push(path));
+        await tester.pumpAndSettle();
+        expect(currentPath(container), path);
+        expect(find.byType(AppTabBar), findsOneWidget, reason: path);
+      }
+
+      // Back walks the pushed stack down to the profile, then home.
+      for (var i = 0; i < 4; i++) {
+        router.pop();
+        await tester.pumpAndSettle();
+      }
+      expect(currentPath(container), AppRoutes.profile);
+      router.pop();
+      await tester.pumpAndSettle();
+      expect(currentPath(container), AppRoutes.home);
+      expect(bar(tester).currentIndex, AppTab.home.index);
+    });
+
+    testWidgets('a tab tapped on the profile switches to that tab', (
+      tester,
+    ) async {
+      final container = await pumpApp(tester, MeditationsHarness().env);
+
+      await tapAndSettle(tester, find.byKey(HomeScreen.menuKey));
+      await tapAndSettle(
+        tester,
+        find.bySemanticsLabel(AppTab.meditations.item.label),
+      );
+
+      expect(currentPath(container), AppRoutes.meditations);
+      expect(find.byType(MeditationsScreen), findsOneWidget);
+      expect(find.byType(ProfileScreen), findsNothing);
+    });
+
+    testWidgets('meditation (ТЗ 5.4.2) keeps the bar on the meditations tab; '
+        'the player covers it', (tester) async {
+      final harness = MeditationsHarness();
+      final container = await harness.open(tester, AppRoutes.meditation(1));
+
+      expect(find.byType(MeditationDetailScreen), findsOneWidget);
+      expect(find.byType(AppTabBar), findsOneWidget);
+      expect(bar(tester).currentIndex, AppTab.meditations.index);
+
+      await tapAndSettle(
+        tester,
+        find.byKey(MeditationDetailScreen.playerButtonKey),
+      );
+      expect(currentPath(container), '${AppRoutes.meditation(1)}/player');
+      expect(find.byType(MeditationPlayerScreen), findsOneWidget);
+      // The shell stays mounted under the player, offstage.
+      expect(find.byType(AppTabBar), findsNothing);
+
+      container.read(appRouterProvider).pop();
+      await tester.pumpAndSettle();
+      expect(currentPath(container), AppRoutes.meditation(1));
+      expect(find.byType(AppTabBar), findsOneWidget);
+    });
+
+    testWidgets('a deep link to the player opens it without the bar', (
+      tester,
+    ) async {
+      final harness = MeditationsHarness();
+      final container = await pumpApp(tester, harness.env);
+      container.read(appRouterProvider).go('${AppRoutes.meditation(1)}/player');
+      await tester.pumpAndSettle();
+
+      expect(find.byType(MeditationPlayerScreen), findsOneWidget);
+      expect(find.byType(AppTabBar), findsNothing);
+    });
+
+    group('graduate verification (ТЗ 5.2.4)', () {
+      const submit = 'POST /api/v1/verification/submit';
+
+      /// A signed-in user whose previous request was rejected, so the form
+      /// is prefilled; the next submit answers [result].
+      TestEnvironment verificationEnv(String result) => homeEnv({
+        verificationStatus: verification('rejected'),
+        submit: verification(result),
+      });
+
+      Future<void> submitForm(WidgetTester tester) async {
+        for (final key in ['consent-privacy', 'consent-personal-data']) {
+          await tapAndSettle(
+            tester,
+            find.descendant(
+              of: find.byKey(ValueKey(key)),
+              matching: find.byType(Icon),
+            ),
+          );
+        }
+        await tapAndSettle(
+          tester,
+          find.descendant(
+            of: find.byKey(GraduateFormScreen.submitKey),
+            matching: find.byType(AppButton),
+          ),
+        );
+      }
+
+      testWidgets('from the profile: the form and the result keep the bar; '
+          'back from the form returns to the profile', (tester) async {
+        final env = verificationEnv('confirmed');
+        final container = await pumpApp(tester, env);
+        container.read(appRouterProvider).go(AppRoutes.profile);
+        await tester.pumpAndSettle();
+
+        await tapAndSettle(
+          tester,
+          find.byKey(ProfileScreen.startVerificationKey),
+        );
+        expect(currentPath(container), AppRoutes.profileVerification);
+        expect(find.byType(GraduateFormScreen), findsOneWidget);
+        expect(find.byType(AppTabBar), findsOneWidget);
+        expect(bar(tester).currentIndex, -1);
+
+        await tapAndSettle(tester, find.byTooltip('Back'));
+        expect(currentPath(container), AppRoutes.profile);
+
+        await tapAndSettle(
+          tester,
+          find.byKey(ProfileScreen.startVerificationKey),
+        );
+        await submitForm(tester);
+
+        expect(env.backend.requestsTo(submit), hasLength(1));
+        expect(currentPath(container), AppRoutes.profileVerificationConfirmed);
+        expect(find.byType(GraduateConfirmedScreen), findsOneWidget);
+        expect(find.byType(AppTabBar), findsOneWidget);
+      });
+
+      testWidgets('from the profile: "не подтвержден" keeps the bar, and '
+          '"Попробовать снова" stays in the profile flow', (tester) async {
+        final env = verificationEnv('rejected');
+        final container = await pumpApp(tester, env);
+        container.read(appRouterProvider).go(AppRoutes.profileVerification);
+        await tester.pumpAndSettle();
+
+        await submitForm(tester);
+        expect(
+          currentPath(container),
+          AppRoutes.profileVerificationNotConfirmed,
+        );
+        expect(find.byType(GraduateNotConfirmedScreen), findsOneWidget);
+        expect(find.byType(AppTabBar), findsOneWidget);
+
+        await tapAndSettle(
+          tester,
+          find.descendant(
+            of: find.byKey(GraduateNotConfirmedScreen.retryKey),
+            matching: find.byType(AppButton),
+          ),
+        );
+        expect(currentPath(container), AppRoutes.profileVerification);
+        expect(find.byType(AppTabBar), findsOneWidget);
+
+        // Opened with `go`: back has nothing to pop and falls back to the
+        // profile, not to the registration question.
+        await tapAndSettle(tester, find.byTooltip('Back'));
+        expect(currentPath(container), AppRoutes.profile);
+      });
+
+      testWidgets('after registration: the same screens stay full screen, '
+          'without the bar', (tester) async {
+        final env = verificationEnv('rejected');
+        final container = await pumpApp(tester, env);
+        final router = container.read(appRouterProvider);
+
+        for (final (path, screen) in [
+          (AppRoutes.verification, GraduateQuestionScreen),
+          (AppRoutes.verificationForm, GraduateFormScreen),
+          (AppRoutes.verificationConfirmed, GraduateConfirmedScreen),
+          (AppRoutes.verificationNotConfirmed, GraduateNotConfirmedScreen),
+        ]) {
+          router.go(path);
+          await tester.pumpAndSettle();
+          expect(find.byType(screen), findsOneWidget, reason: path);
+          expect(find.byType(AppTabBar), findsNothing, reason: path);
+        }
+
+        // The registration form still leads to the registration results.
+        router.go(AppRoutes.verificationForm);
+        await tester.pumpAndSettle();
+        await submitForm(tester);
+        expect(currentPath(container), AppRoutes.verificationNotConfirmed);
+        expect(find.byType(AppTabBar), findsNothing);
+      });
+    });
+
+    testWidgets('the logout sheet opens over the bar', (tester) async {
+      await pumpApp(tester, MeditationsHarness().env);
+      await tapAndSettle(tester, find.byKey(HomeScreen.menuKey));
+
+      await tapAndSettle(tester, find.text('Выйти'));
+
+      final sheet = find.byType(ConfirmSheet);
+      expect(sheet, findsOneWidget);
+      // On the root navigator: the sheet is not a descendant of the shell.
+      expect(
+        find.ancestor(of: sheet, matching: find.byType(AppTabShell)),
+        findsNothing,
+      );
+    });
   });
 
   testWidgets('shows the :id path parameter on a detail route', (tester) async {
