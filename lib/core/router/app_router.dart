@@ -7,6 +7,7 @@ import 'package:hoffman/core/router/app_tab_shell.dart';
 import 'package:hoffman/core/router/placeholder_screen.dart';
 import 'package:hoffman/features/auth/index.dart';
 import 'package:hoffman/features/home/index.dart';
+import 'package:hoffman/features/meditations/index.dart';
 import 'package:hoffman/features/onboarding/index.dart';
 import 'package:hoffman/features/profile/index.dart';
 
@@ -164,16 +165,23 @@ GoRouter createAppRouter({
             AppRoutes.articles,
             const PlaceholderScreen(title: 'Articles'),
           ),
-          _tabRoute(
-            AppRoutes.meditations,
-            const PlaceholderScreen(title: 'Meditations'),
-          ),
+          _tabRoute(AppRoutes.meditations, const MeditationsScreen()),
           _tabRoute(AppRoutes.tools, const PlaceholderScreen(title: 'Tools')),
           _tabRoute(AppRoutes.diary, const PlaceholderScreen(title: 'Diary')),
         ],
       ),
-      _placeholderRoute('/meditations/:id', 'Meditation'),
-      _placeholderRoute('/meditations/:id/player', 'Meditation player'),
+      GoRoute(
+        path: '/meditations/:id',
+        builder: (context, state) => MeditationDetailScreen(
+          id: int.tryParse(state.pathParameters['id']!),
+        ),
+      ),
+      GoRoute(
+        path: '/meditations/:id/player',
+        builder: (context, state) => MeditationPlayerScreen(
+          id: int.tryParse(state.pathParameters['id']!),
+        ),
+      ),
       _placeholderRoute('/tools/:id', 'Tool'),
       _placeholderRoute(AppRoutes.topics, 'Topics'),
       _placeholderRoute('/topics/:id', 'Topic'),

@@ -1,5 +1,6 @@
 package com.hoffman.hoffman
 
-import io.flutter.embedding.android.FlutterActivity
+import com.ryanheise.audioservice.AudioServiceActivity
 
-class MainActivity : FlutterActivity()
+// audio_service needs its activity for background meditation playback.
+class MainActivity : AudioServiceActivity()

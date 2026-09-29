@@ -36,7 +36,8 @@ class HomeCoverImage extends StatelessWidget {
 ///
 /// The image is the cover of the section's featured item ([imageUrl]),
 /// falling back to the stock [image]. With [onTap] the cover opens that
-/// item; the `все` badge keeps leading to the list.
+/// item; the `все` badge keeps leading to the list. The section's own list
+/// screen heads with it too, without the badge ([onSeeAll] `null`).
 class HomeSectionCover extends StatelessWidget {
   const HomeSectionCover({
     required this.image,
@@ -69,7 +70,9 @@ class HomeSectionCover extends StatelessWidget {
   final Uri? imageUrl;
   final String title;
   final String subtitle;
-  final VoidCallback onSeeAll;
+
+  /// Leads to the full list; `null` hides the `все` badge.
+  final VoidCallback? onSeeAll;
 
   /// Opens the featured item; `null` leaves the cover inert.
   final VoidCallback? onTap;
@@ -141,18 +144,21 @@ class HomeSectionCover extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(width: AppSpacing.md),
-                    Semantics(
-                      button: true,
-                      label:
-                          '${HomeText.seeAll}: ${title.replaceAll('\n', ' ')}',
-                      excludeSemantics: true,
-                      child: AppBadge(
-                        key: seeAllKey,
-                        label: HomeText.seeAll,
-                        onTap: onSeeAll,
+                    if (onSeeAll case final onSeeAll?) ...[
+                      const SizedBox(width: AppSpacing.md),
+                      Semantics(
+                        button: true,
+                        label:
+                            '${HomeText.seeAll}: '
+                            '${title.replaceAll('\n', ' ')}',
+                        excludeSemantics: true,
+                        child: AppBadge(
+                          key: seeAllKey,
+                          label: HomeText.seeAll,
+                          onTap: onSeeAll,
+                        ),
                       ),
-                    ),
+                    ],
                   ],
                 ),
                 const SizedBox(height: AppSpacing.md),

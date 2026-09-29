@@ -4,6 +4,7 @@ import 'package:hoffman/core/router/index.dart';
 import 'package:hoffman/core/widgets/index.dart';
 import 'package:hoffman/features/auth/index.dart';
 import 'package:hoffman/features/home/index.dart';
+import 'package:hoffman/features/meditations/index.dart';
 import 'package:hoffman/features/onboarding/index.dart';
 
 import '../../helpers/app_harness.dart';
@@ -132,7 +133,14 @@ void main() {
           await tapAndSettle(tester, find.byKey(HomeScreen.seeAllKey(route)));
 
           expect(currentPath(container), route);
-          expect(find.byType(PlaceholderScreen), findsOneWidget);
+          expect(
+            find.byType(
+              route == AppRoutes.meditations
+                  ? MeditationsScreen
+                  : PlaceholderScreen,
+            ),
+            findsOneWidget,
+          );
           // Tab sections keep the bar; topics is pushed over it.
           expect(find.byType(AppTabBar), isTab ? findsOneWidget : findsNothing);
         });
