@@ -20,16 +20,21 @@ enum AppTab {
   tools(
     AppRoutes.tools,
     AppTabBarItem(icon: Icons.build_rounded, label: 'Инструменты'),
+    otherSections: [AppRoutes.topics],
   ),
   diary(
     AppRoutes.diary,
     AppTabBarItem(icon: Icons.menu_book_rounded, label: 'Дневник'),
   );
 
-  AppTab(this.route, this.item);
+  AppTab(this.route, this.item, {this.otherSections = const []});
 
   final String route;
   final AppTabBarItem item;
+
+  /// Sections that are not the tab's list but belong to it, like the topics
+  /// of [tools] (ТЗ 5.5–5.6: one menu item for both).
+  final List<String> otherSections;
 
   static AppTab? of(String location) {
     for (final tab in values) {
@@ -38,13 +43,16 @@ enum AppTab {
     return null;
   }
 
-  /// The tab whose section [location] belongs to: its list or a screen
-  /// under it (`/meditations/42` → [meditations]). `null` for the screens of
-  /// no tab, such as the profile.
+  /// The tab whose section [location] belongs to: its list, one of its
+  /// [otherSections] or a screen under them (`/meditations/42` →
+  /// [meditations], `/topics/7` → [tools]). `null` for the screens of no
+  /// tab, such as the profile.
   static AppTab? sectionOf(String location) {
     for (final tab in values) {
-      if (location == tab.route || location.startsWith('${tab.route}/')) {
-        return tab;
+      for (final section in [tab.route, ...tab.otherSections]) {
+        if (location == section || location.startsWith('$section/')) {
+          return tab;
+        }
       }
     }
     return null;

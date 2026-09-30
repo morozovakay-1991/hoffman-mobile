@@ -49,6 +49,8 @@ final Iterable<String> _placeholderRoutes = _protectedRoutes.where(
       p != AppRoutes.verification &&
       p != AppRoutes.home &&
       !p.startsWith(AppRoutes.meditations) &&
+      !p.startsWith(AppRoutes.tools) &&
+      !p.startsWith(AppRoutes.topics) &&
       !p.startsWith(AppRoutes.articles) &&
       !p.startsWith(AppRoutes.profile),
 );
@@ -163,7 +165,7 @@ void main() {
     tester,
   ) async {
     final router = createAppRouter(
-      initialLocation: AppRoutes.tools,
+      initialLocation: AppRoutes.diary,
       readGuardState: () => _state(AuthStatus.signedIn),
     );
     addTearDown(router.dispose);
@@ -191,7 +193,7 @@ void main() {
   testWidgets('tab bar: five tabs in the mockup order, tapping one opens its '
       'section and marks it selected', (tester) async {
     final router = createAppRouter(
-      initialLocation: AppRoutes.tools,
+      initialLocation: '/diary/7',
       readGuardState: () => _state(AuthStatus.signedIn),
     );
     addTearDown(router.dispose);
@@ -207,11 +209,10 @@ void main() {
       'Инструменты',
       'Дневник',
     ]);
-    expect(bar.currentIndex, AppTab.tools.index);
+    expect(bar.currentIndex, AppTab.diary.index);
 
-    // Meditations and articles need the providers; home_screen_test covers
-    // their tabs.
-    for (final tab in [AppTab.diary, AppTab.tools]) {
+    // The other tabs need the providers; home_screen_test covers them.
+    for (final tab in [AppTab.diary]) {
       await tester.tap(find.bySemanticsLabel(tab.item.label));
       await tester.pumpAndSettle();
 
@@ -229,7 +230,10 @@ void main() {
     expect(AppTab.sectionOf('/tools/42'), AppTab.tools);
     expect(AppTab.sectionOf('/meditationsx'), isNull);
     expect(AppTab.sectionOf(AppRoutes.profile), isNull);
-    expect(AppTab.sectionOf(AppRoutes.topics), isNull);
+    // The topics share the tools tab (ТЗ 5.5–5.6).
+    expect(AppTab.sectionOf(AppRoutes.topics), AppTab.tools);
+    expect(AppTab.sectionOf(AppRoutes.topic(7)), AppTab.tools);
+    expect(AppTab.sectionOf('/topicsx'), isNull);
     // `of` still matches the tab lists only.
     expect(AppTab.of(AppRoutes.meditation(42)), isNull);
   });
@@ -462,7 +466,7 @@ void main() {
 
   testWidgets('shows the :id path parameter on a detail route', (tester) async {
     final router = createAppRouter(
-      initialLocation: '/tools/abc-123',
+      initialLocation: '/diary/abc-123',
       readGuardState: () => _state(AuthStatus.signedIn),
     );
     addTearDown(router.dispose);

@@ -352,7 +352,6 @@ class _ToolsSection extends StatelessWidget {
             actionLabel: HomeText.read,
             color: AppColors.blueTint,
             actionVariant: AppButtonVariant.secondary,
-            isLocked: featured.isLocked,
             onTap: () => open(featured),
           ),
         for (final item in section.items)
@@ -363,7 +362,6 @@ class _ToolsSection extends StatelessWidget {
               description: item.shortDescription,
               tag: item.stageTag,
               actionLabel: HomeText.read,
-              isLocked: item.isLocked,
               onTap: () => open(item),
             ),
           ),
@@ -418,7 +416,6 @@ class _TopicsSectionState extends State<_TopicsSection> {
             description: featured.fullDescription ?? '',
             actionLabel: HomeText.read,
             color: _TopicsSection.featuredColor,
-            isLocked: featured.isLocked,
             onTap: () => open(featured),
           ),
         for (final item in section.items)
@@ -434,7 +431,6 @@ class _TopicsSectionState extends State<_TopicsSection> {
               body: item.fullDescription ?? '',
               actionLabel: HomeText.read,
               isExpanded: _expandedId == item.id,
-              isLocked: item.isLocked,
               onTap: () => setState(
                 () => _expandedId = _expandedId == item.id ? null : item.id,
               ),

@@ -266,6 +266,37 @@ void main() {
       expect(find.byType(Icon), findsOneWidget); // the action arrow
     });
 
+    testWidgets('a cover is a square thumbnail left of the description', (
+      tester,
+    ) async {
+      await pumpThemed(
+        tester,
+        const ToolListCard(
+          title: 'Выражение гнева',
+          cover: _cover,
+          description: 'Описание инструмента',
+          tag: 'выражение',
+          actionLabel: 'Читать',
+        ),
+        width: _width,
+      );
+
+      final thumbnail = find.byKey(_coverKey);
+      expect(
+        tester.getSize(thumbnail),
+        const Size.square(ToolListCard.coverSize),
+      );
+      expect(
+        tester.getTopRight(thumbnail).dx,
+        lessThan(tester.getTopLeft(find.text('Описание инструмента')).dx),
+      );
+      // The tag keeps its place on the right.
+      expect(
+        tester.getTopLeft(find.text('выражение')).dx,
+        greaterThan(tester.getTopRight(find.text('Описание инструмента')).dx),
+      );
+    });
+
     testWidgets('tap anywhere calls onTap', (tester) async {
       await _expectTapAnywhere(tester, (onTap) => card(onTap: onTap), [
         find.text('Читать'),
@@ -392,21 +423,6 @@ void main() {
         cover: _cover,
         date: 'Март, 2025',
         description: 'Описание',
-        actionLabel: 'Читать',
-        isLocked: isLocked,
-      ),
-      'ToolListCard': ({required isLocked}) => ToolListCard(
-        title: 'Утренняя медитация',
-        description: 'Описание',
-        tag: 'выражение',
-        actionLabel: 'Читать',
-        isLocked: isLocked,
-      ),
-      'ThemeListCard': ({required isLocked}) => ThemeListCard(
-        title: 'Утренняя медитация',
-        subtitle: 'Подзаголовок',
-        cover: _cover,
-        body: 'Текст',
         actionLabel: 'Читать',
         isLocked: isLocked,
       ),

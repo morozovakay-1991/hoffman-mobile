@@ -37,7 +37,8 @@ class HomeCoverImage extends StatelessWidget {
 /// The image is the cover of the section's featured item ([imageUrl]),
 /// falling back to the stock [image]. With [onTap] the cover opens that
 /// item; the `все` badge keeps leading to the list. The section's own list
-/// screen heads with it too, without the badge ([onSeeAll] `null`).
+/// screen heads with it too, without the badge ([onSeeAll] `null`) or with
+/// a badge to a sibling section ([seeAllLabel], e.g. `темы` on the tools).
 class HomeSectionCover extends StatelessWidget {
   const HomeSectionCover({
     required this.image,
@@ -50,6 +51,7 @@ class HomeSectionCover extends StatelessWidget {
     this.tapLabel,
     this.coverKey,
     this.seeAllKey,
+    this.seeAllLabel = HomeText.seeAll,
     this.foreground = AppColors.background,
     this.shaded = false,
   });
@@ -81,6 +83,9 @@ class HomeSectionCover extends StatelessWidget {
   final String? tapLabel;
   final Key? coverKey;
   final Key? seeAllKey;
+
+  /// Label of the [onSeeAll] badge.
+  final String seeAllLabel;
 
   /// Title and subtitle color: white on the dark covers, black on the light
   /// `Инструменты` one.
@@ -149,12 +154,12 @@ class HomeSectionCover extends StatelessWidget {
                       Semantics(
                         button: true,
                         label:
-                            '${HomeText.seeAll}: '
+                            '$seeAllLabel: '
                             '${title.replaceAll('\n', ' ')}',
                         excludeSemantics: true,
                         child: AppBadge(
                           key: seeAllKey,
-                          label: HomeText.seeAll,
+                          label: seeAllLabel,
                           onTap: onSeeAll,
                         ),
                       ),
