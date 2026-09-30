@@ -21,7 +21,8 @@ abstract final class AppRoutes {
   static const String home = '/home';
 
   // Content sections. Their list routes are the bottom tabs (except
-  // [topics]); apart from meditations the screens are still placeholders.
+  // [topics]); apart from meditations and articles the screens are still
+  // placeholders.
   static const String meditations = '/meditations';
   static const String tools = '/tools';
   static const String topics = '/topics';

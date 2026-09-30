@@ -7,4 +7,5 @@ export 'confirm_sheet.dart';
 export 'content_cards.dart';
 export 'loading_indicator.dart';
 export 'locked_overlay.dart';
+export 'share_button.dart';
 export 'state_widgets.dart';

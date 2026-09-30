@@ -113,6 +113,7 @@ class HomeArticle {
     required this.shortDescription,
     this.coverImageUrl,
     this.publishedAt,
+    this.isNew = false,
     this.isLocked = false,
   });
 
@@ -123,6 +124,7 @@ class HomeArticle {
       shortDescription: json['short_description'] as String? ?? '',
       coverImageUrl: _coverUrl(json),
       publishedAt: DateTime.tryParse(json['published_at'] as String? ?? ''),
+      isNew: json['is_new'] as bool? ?? false,
       isLocked: json['is_locked'] as bool? ?? false,
     );
   }
@@ -132,6 +134,9 @@ class HomeArticle {
   final String shortDescription;
   final Uri? coverImageUrl;
   final DateTime? publishedAt;
+
+  /// Marked new in the admin (`is_new`); the card shows the `новое` badge.
+  final bool isNew;
   final bool isLocked;
 }
 

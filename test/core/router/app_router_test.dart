@@ -49,6 +49,7 @@ final Iterable<String> _placeholderRoutes = _protectedRoutes.where(
       p != AppRoutes.verification &&
       p != AppRoutes.home &&
       !p.startsWith(AppRoutes.meditations) &&
+      !p.startsWith(AppRoutes.articles) &&
       !p.startsWith(AppRoutes.profile),
 );
 
@@ -162,7 +163,7 @@ void main() {
     tester,
   ) async {
     final router = createAppRouter(
-      initialLocation: AppRoutes.articles,
+      initialLocation: AppRoutes.tools,
       readGuardState: () => _state(AuthStatus.signedIn),
     );
     addTearDown(router.dispose);
@@ -190,7 +191,7 @@ void main() {
   testWidgets('tab bar: five tabs in the mockup order, tapping one opens its '
       'section and marks it selected', (tester) async {
     final router = createAppRouter(
-      initialLocation: AppRoutes.articles,
+      initialLocation: AppRoutes.tools,
       readGuardState: () => _state(AuthStatus.signedIn),
     );
     addTearDown(router.dispose);
@@ -206,10 +207,11 @@ void main() {
       'Инструменты',
       'Дневник',
     ]);
-    expect(bar.currentIndex, AppTab.articles.index);
+    expect(bar.currentIndex, AppTab.tools.index);
 
-    // Meditations needs the providers; home_screen_test covers its tab.
-    for (final tab in [AppTab.tools, AppTab.diary, AppTab.articles]) {
+    // Meditations and articles need the providers; home_screen_test covers
+    // their tabs.
+    for (final tab in [AppTab.diary, AppTab.tools]) {
       await tester.tap(find.bySemanticsLabel(tab.item.label));
       await tester.pumpAndSettle();
 

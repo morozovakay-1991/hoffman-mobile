@@ -5,6 +5,7 @@ import 'package:hoffman/core/config/feature_flags.dart';
 import 'package:hoffman/core/router/app_routes.dart';
 import 'package:hoffman/core/router/app_tab_shell.dart';
 import 'package:hoffman/core/router/placeholder_screen.dart';
+import 'package:hoffman/features/articles/index.dart';
 import 'package:hoffman/features/auth/index.dart';
 import 'package:hoffman/features/home/index.dart';
 import 'package:hoffman/features/meditations/index.dart';
@@ -163,10 +164,7 @@ GoRouter createAppRouter({
             AppTabShell(location: state.uri.path, child: child),
         routes: [
           _tabRoute(AppRoutes.home, const HomeScreen()),
-          _tabRoute(
-            AppRoutes.articles,
-            const PlaceholderScreen(title: 'Articles'),
-          ),
+          _tabRoute(AppRoutes.articles, const ArticlesScreen()),
           _tabRoute(AppRoutes.meditations, const MeditationsScreen()),
           _tabRoute(AppRoutes.tools, const PlaceholderScreen(title: 'Tools')),
           _tabRoute(AppRoutes.diary, const PlaceholderScreen(title: 'Diary')),
@@ -180,7 +178,12 @@ GoRouter createAppRouter({
           _placeholderRoute(AppRoutes.topics, 'Topics'),
           _placeholderRoute('/topics/:id', 'Topic'),
           _placeholderRoute('/diary/:id', 'Diary entry'),
-          _placeholderRoute('/articles/:id', 'Article'),
+          GoRoute(
+            path: '/articles/:id',
+            builder: (context, state) => ArticleDetailScreen(
+              id: int.tryParse(state.pathParameters['id']!),
+            ),
+          ),
           // Profile. Flat siblings like the auth steps: every sub-screen is
           // `push`ed, so back returns to wherever it was opened from. There
           // is no subscription screen by design — subscriptions are managed
