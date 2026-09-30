@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hoffman/core/router/index.dart';
 import 'package:hoffman/core/widgets/index.dart';
+import 'package:hoffman/features/articles/index.dart';
 import 'package:hoffman/features/auth/index.dart';
 import 'package:hoffman/features/home/index.dart';
 import 'package:hoffman/features/meditations/index.dart';
@@ -134,11 +135,11 @@ void main() {
 
           expect(currentPath(container), route);
           expect(
-            find.byType(
-              route == AppRoutes.meditations
-                  ? MeditationsScreen
-                  : PlaceholderScreen,
-            ),
+            find.byType(switch (route) {
+              AppRoutes.meditations => MeditationsScreen,
+              AppRoutes.articles => ArticlesScreen,
+              _ => PlaceholderScreen,
+            }),
             findsOneWidget,
           );
           // Every section keeps the bar; only the tab lists mark a tab.

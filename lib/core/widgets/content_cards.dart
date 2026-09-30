@@ -89,7 +89,8 @@ class MeditationCard extends StatelessWidget {
 ///
 /// Top divider, then the title; below it the details column (date,
 /// description, action link) on the left and the [cover] on the right. The
-/// whole card handles [onTap]. [isLocked] adds a [LockedMark] to the title.
+/// whole card handles [onTap]. [isLocked] adds a [LockedMark] to the title;
+/// [badge] adds an [AppBadge] ([AppBadgeVariant.tinted]) after the date.
 class ArticleListCard extends StatelessWidget {
   const ArticleListCard({
     required this.title,
@@ -98,6 +99,7 @@ class ArticleListCard extends StatelessWidget {
     required this.description,
     required this.actionLabel,
     super.key,
+    this.badge,
     this.isLocked = false,
     this.onTap,
   });
@@ -113,11 +115,16 @@ class ArticleListCard extends StatelessWidget {
   final String date;
   final String description;
   final String actionLabel;
+
+  /// E.g. `новое` for an article marked new in the admin; `null` hides it.
+  final String? badge;
   final bool isLocked;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
+    final meta = _MetaRow(icon: Icons.calendar_month, text: date);
+
     return _ListCard(
       onTap: onTap,
       child: Column(
@@ -131,7 +138,19 @@ class ArticleListCard extends StatelessWidget {
             children: [
               _DetailsColumn(
                 children: [
-                  _MetaRow(icon: Icons.calendar_month, text: date),
+                  if (badge case final badge?)
+                    // TODO(figma): no `новое` badge in the mockups (article
+                    // list card 946:1583); the existing tinted variant stands
+                    // in, placed after the date until the design has one.
+                    Row(
+                      children: [
+                        Flexible(child: meta),
+                        const SizedBox(width: AppSpacing.sm),
+                        AppBadge(label: badge, variant: AppBadgeVariant.tinted),
+                      ],
+                    )
+                  else
+                    meta,
                   _Description(description),
                   _ActionLink(actionLabel),
                 ],

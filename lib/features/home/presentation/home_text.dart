@@ -33,6 +33,12 @@ abstract final class HomeText {
   static const String read = 'Читать';
   static const String continueDiary = 'Продолжить';
 
+  /// Badge of an article marked new (`is_new`).
+  static const String newBadge = 'новое';
+
+  /// The card badge of an article: [newBadge] or none.
+  static String? articleBadge({required bool isNew}) => isNew ? newBadge : null;
+
   static const String sectionEmpty = 'Здесь пока ничего нет';
   static const String loadFailed = 'Не удалось загрузить данные';
   static const String refreshFailed = 'Не удалось обновить данные';

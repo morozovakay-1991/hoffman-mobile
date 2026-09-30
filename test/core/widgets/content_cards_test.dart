@@ -179,6 +179,42 @@ void main() {
         find.byKey(_coverKey),
       ]);
     });
+
+    testWidgets('no badge by default', (tester) async {
+      await pumpThemed(tester, card(), width: _width);
+
+      expect(find.byType(AppBadge), findsNothing);
+    });
+
+    testWidgets('a badge sits after the date, left of the cover', (
+      tester,
+    ) async {
+      await pumpThemed(
+        tester,
+        const ArticleListCard(
+          title: 'Стресс',
+          cover: _cover,
+          date: 'Сентябрь, 2025',
+          description: 'Откуда они берутся',
+          actionLabel: 'Читать',
+          badge: 'новое',
+        ),
+        width: _width,
+      );
+
+      final badge = find.widgetWithText(AppBadge, 'новое');
+      expect(badge, findsOneWidget);
+      expect(tester.widget<AppBadge>(badge).variant, AppBadgeVariant.tinted);
+      expect(
+        tester.getTopLeft(badge).dx,
+        greaterThan(tester.getTopRight(find.text('Сентябрь, 2025')).dx),
+      );
+      expect(
+        tester.getTopRight(badge).dx,
+        lessThanOrEqualTo(tester.getTopLeft(find.byKey(_coverKey)).dx),
+      );
+      expect(tester.takeException(), isNull);
+    });
   });
 
   group('ToolListCard', () {

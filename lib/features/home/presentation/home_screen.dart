@@ -607,6 +607,7 @@ class _ArticlesSection extends StatelessWidget {
               date: HomeText.monthYear(item.publishedAt),
               description: item.shortDescription,
               actionLabel: HomeText.read,
+              badge: HomeText.articleBadge(isNew: item.isNew),
               isLocked: item.isLocked,
               onTap: () => open(item),
             ),

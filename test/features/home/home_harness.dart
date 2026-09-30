@@ -3,6 +3,8 @@ import '../../helpers/app_harness.dart';
 const me = 'GET /api/v1/auth/me';
 const verificationStatus = 'GET /api/v1/verification/status';
 const getHome = 'GET /api/v1/home';
+const getArticles = 'GET /api/v1/articles';
+String getArticle(int id) => 'GET /api/v1/articles/$id';
 
 Map<String, Object?> meditationJson(
   int id,
@@ -57,14 +59,15 @@ Map<String, Object?> articleJson(
   String title, {
   String? publishedAt = '2025-03-10T09:00:00.000000Z',
   String? coverImageUrl,
+  bool isNew = false,
 }) => {
   'id': id,
   'title': title,
   'short_description': 'Описание: $title',
-  'full_description': 'Полный текст',
+  'full_description': '<p>Полный текст: $title</p>',
   'cover_image_url': coverImageUrl,
   'published_at': publishedAt,
-  'is_new': false,
+  'is_new': isNew,
   'is_locked': false,
 };
 
@@ -135,14 +138,30 @@ FakeResponse verification(String? status) => FakeResponse(200, {
         },
 });
 
-/// A signed-in user (`Kate`) who lands on home.
+/// `GET /articles`: [featured] (or none) and the other [items].
+FakeResponse articlesResponse(
+  Map<String, Object?>? featured, [
+  List<Map<String, Object?>> items = const [],
+]) => FakeResponse(200, {'data': sectionJson(featured, items)});
+
+/// `GET /articles/{id}`.
+FakeResponse articleResponse(Map<String, Object?> article) =>
+    FakeResponse(200, {'data': article});
+
+/// A signed-in user (`Kate`) who lands on home. The articles of the
+/// default [homeResponse] are served by `GET /articles` too.
 TestEnvironment homeEnv([Map<String, FakeResponse> routes = const {}]) {
+  final featured = articleJson(31, 'Что такое Процесс Хоффмана?');
+  final item = articleJson(32, '«Навсегда твой» или про роли в семье');
   return TestEnvironment(
     token: 'token',
     backend: FakeBackend({
       me: const FakeResponse(200, {'user': testUserJson}),
       verificationStatus: verification(null),
       getHome: homeResponse(),
+      getArticles: articlesResponse(featured, [item]),
+      getArticle(31): articleResponse(featured),
+      getArticle(32): articleResponse(item),
       ...routes,
     }),
   );

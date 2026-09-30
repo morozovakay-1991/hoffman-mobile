@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoffman/core/errors/index.dart';
-import 'package:hoffman/core/services/text_sharer.dart';
 import 'package:hoffman/core/theme/index.dart';
 import 'package:hoffman/core/widgets/index.dart';
 import 'package:hoffman/features/meditations/domain/meditation.dart';
@@ -65,47 +63,24 @@ class MeditationLockedView extends StatelessWidget {
   }
 }
 
-/// The share icon: opens the system share sheet with the meditation's
-/// title and short description ([MeditationsText.shareText]).
-class MeditationShareButton extends ConsumerWidget {
+/// The share icon ([ShareButton]) with the meditation's title and short
+/// description ([MeditationsText.shareText]).
+class MeditationShareButton extends StatelessWidget {
   const MeditationShareButton({
     required this.meditation,
     super.key,
     this.color = AppColors.basicBlack,
   });
 
-  static const double iconSize = 24;
-
   final Meditation meditation;
   final Color color;
 
-  Future<void> _share(BuildContext context, WidgetRef ref) async {
-    final box = context.findRenderObject() as RenderBox?;
-    final origin = box == null || !box.hasSize
-        ? null
-        : box.localToGlobal(Offset.zero) & box.size;
-    try {
-      await ref.read(textSharerProvider)(
-        MeditationsText.shareText(meditation),
-        subject: meditation.title,
-        origin: origin,
-      );
-    } on Object {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          const SnackBar(content: Text(MeditationsText.shareFailed)),
-        );
-    }
-  }
-
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return IconButton(
-      tooltip: MeditationsText.share,
-      icon: Icon(Icons.ios_share, size: iconSize, color: color),
-      onPressed: () => _share(context, ref),
+  Widget build(BuildContext context) {
+    return ShareButton(
+      text: MeditationsText.shareText(meditation),
+      subject: meditation.title,
+      color: color,
     );
   }
 }
