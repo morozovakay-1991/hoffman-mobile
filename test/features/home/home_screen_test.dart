@@ -7,6 +7,8 @@ import 'package:hoffman/features/auth/index.dart';
 import 'package:hoffman/features/home/index.dart';
 import 'package:hoffman/features/meditations/index.dart';
 import 'package:hoffman/features/onboarding/index.dart';
+import 'package:hoffman/features/tools/index.dart';
+import 'package:hoffman/features/topics/index.dart';
 
 import '../../helpers/app_harness.dart';
 import 'home_harness.dart';
@@ -121,12 +123,12 @@ void main() {
     });
 
     group('"все" opens the full list of the section', () {
-      for (final (route, isTab) in [
-        (AppRoutes.meditations, true),
-        (AppRoutes.tools, true),
-        (AppRoutes.topics, false),
-        (AppRoutes.diary, true),
-        (AppRoutes.articles, true),
+      for (final route in [
+        AppRoutes.meditations,
+        AppRoutes.tools,
+        AppRoutes.topics,
+        AppRoutes.diary,
+        AppRoutes.articles,
       ]) {
         testWidgets(route, (tester) async {
           final container = await pumpApp(tester, homeEnv());
@@ -138,15 +140,18 @@ void main() {
             find.byType(switch (route) {
               AppRoutes.meditations => MeditationsScreen,
               AppRoutes.articles => ArticlesScreen,
+              AppRoutes.tools => ToolsScreen,
+              AppRoutes.topics => TopicsScreen,
               _ => PlaceholderScreen,
             }),
             findsOneWidget,
           );
-          // Every section keeps the bar; only the tab lists mark a tab.
+          // Every section keeps the bar and marks its tab; the topics
+          // share the tools one.
           expect(find.byType(AppTabBar), findsOneWidget);
           expect(
             tester.widget<AppTabBar>(find.byType(AppTabBar)).currentIndex,
-            isTab ? AppTab.of(route)!.index : -1,
+            AppTab.sectionOf(route)!.index,
           );
         });
       }
@@ -218,7 +223,8 @@ void main() {
       expect(currentPath(container), AppRoutes.topic(22));
     });
 
-    testWidgets('locked content is marked with a lock', (tester) async {
+    testWidgets('locked meditations are marked with a lock; tools and '
+        'topics never are, whatever is_locked says', (tester) async {
       await pumpApp(
         tester,
         homeEnv({
@@ -226,8 +232,12 @@ void main() {
             meditations: sectionJson(meditationJson(1, 'Открытая'), [
               meditationJson(2, 'Закрытая', isLocked: true),
             ]),
-            tools: sectionJson(toolJson(11, 'Закрытый', isLocked: true)),
-            topics: sectionJson(topicJson(21, 'Открытая тема')),
+            tools: sectionJson(toolJson(11, 'Инструмент', isLocked: true), [
+              toolJson(12, 'Ещё инструмент', isLocked: true),
+            ]),
+            topics: sectionJson(topicJson(21, 'Тема', isLocked: true), [
+              topicJson(22, 'Ещё тема', isLocked: true),
+            ]),
           ),
         }),
       );
@@ -242,8 +252,10 @@ void main() {
           )
           .map((f) => (f.title, f.isLocked));
       expect(featured, contains(('Открытая', false)));
-      expect(featured, contains(('Закрытый', true)));
-      expect(find.byType(LockedMark, skipOffstage: false), findsNWidgets(2));
+      expect(featured, contains(('Инструмент', false)));
+      expect(featured, contains(('Тема', false)));
+      // The one on the locked meditation card only.
+      expect(find.byType(LockedMark, skipOffstage: false), findsOneWidget);
     });
 
     testWidgets('an empty section says so and keeps its "все"', (tester) async {

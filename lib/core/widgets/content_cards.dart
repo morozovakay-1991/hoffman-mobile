@@ -171,7 +171,8 @@ class ArticleListCard extends StatelessWidget {
 ///
 /// Top divider, title, then the description with a [tag] [AppBadge]
 /// ([AppBadgeVariant.tinted]) on its right, then the action link. The whole
-/// card handles [onTap]. [isLocked] adds a [LockedMark] to the title.
+/// card handles [onTap]. [cover] adds a [coverSize] thumbnail on the left
+/// of the description. Tools are open to everyone, so it has no lock mark.
 class ToolListCard extends StatelessWidget {
   const ToolListCard({
     required this.title,
@@ -179,17 +180,23 @@ class ToolListCard extends StatelessWidget {
     required this.tag,
     required this.actionLabel,
     super.key,
-    this.isLocked = false,
+    this.cover,
     this.onTap,
   });
 
+  // TODO(figma): the card has no thumbnail in the mockup (132:5143); ТЗ 5.5
+  // asks for one on the tools list, so its size is a stand-in.
+  static const double coverSize = 88;
+
   final String title;
+
+  /// Cover thumbnail, clipped to a [coverSize] square; `null` hides it.
+  final Widget? cover;
   final String description;
 
   /// `null` hides the badge (e.g. a tool without a stage).
   final String? tag;
   final String actionLabel;
-  final bool isLocked;
   final VoidCallback? onTap;
 
   @override
@@ -199,11 +206,18 @@ class ToolListCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _CardTitle(title, isLocked: isLocked),
+          _CardTitle(title),
           const SizedBox(height: AppSpacing.lg),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (cover case final cover?) ...[
+                SizedBox.square(
+                  dimension: coverSize,
+                  child: ClipRect(child: cover),
+                ),
+                const SizedBox(width: AppSpacing.md),
+              ],
               Expanded(child: _Description(description)),
               if (tag case final tag?) ...[
                 // TODO(figma): the mockup gives the text a fixed 231px width;
@@ -229,7 +243,7 @@ class ToolListCard extends StatelessWidget {
 /// the multi-paragraph [body] and the action link. The whole card handles
 /// [onTap]; the owner toggles [isExpanded]. With [onActionTap] set, the
 /// action link handles its own taps (e.g. opens the topic while [onTap]
-/// folds the card). [isLocked] adds a [LockedMark] to the title.
+/// folds the card). Topics are open to everyone, so it has no lock mark.
 class ThemeListCard extends StatelessWidget {
   const ThemeListCard({
     required this.title,
@@ -239,7 +253,6 @@ class ThemeListCard extends StatelessWidget {
     required this.actionLabel,
     super.key,
     this.isExpanded = false,
-    this.isLocked = false,
     this.onTap,
     this.onActionTap,
   });
@@ -267,7 +280,6 @@ class ThemeListCard extends StatelessWidget {
   final String body;
   final String actionLabel;
   final bool isExpanded;
-  final bool isLocked;
   final VoidCallback? onTap;
   final VoidCallback? onActionTap;
 
@@ -283,7 +295,7 @@ class ThemeListCard extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(child: _CardTitle(title, isLocked: isLocked)),
+                Expanded(child: _CardTitle(title)),
                 Padding(
                   padding: const EdgeInsets.only(top: _headerIconTop),
                   child: isExpanded

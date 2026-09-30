@@ -11,6 +11,8 @@ import 'package:hoffman/features/home/index.dart';
 import 'package:hoffman/features/meditations/index.dart';
 import 'package:hoffman/features/onboarding/index.dart';
 import 'package:hoffman/features/profile/index.dart';
+import 'package:hoffman/features/tools/index.dart';
+import 'package:hoffman/features/topics/index.dart';
 
 /// Where the session stands, as far as routing is concerned.
 enum AuthStatus {
@@ -166,7 +168,7 @@ GoRouter createAppRouter({
           _tabRoute(AppRoutes.home, const HomeScreen()),
           _tabRoute(AppRoutes.articles, const ArticlesScreen()),
           _tabRoute(AppRoutes.meditations, const MeditationsScreen()),
-          _tabRoute(AppRoutes.tools, const PlaceholderScreen(title: 'Tools')),
+          _tabRoute(AppRoutes.tools, const ToolsScreen()),
           _tabRoute(AppRoutes.diary, const PlaceholderScreen(title: 'Diary')),
           GoRoute(
             path: '/meditations/:id',
@@ -174,9 +176,23 @@ GoRouter createAppRouter({
               id: int.tryParse(state.pathParameters['id']!),
             ),
           ),
-          _placeholderRoute('/tools/:id', 'Tool'),
-          _placeholderRoute(AppRoutes.topics, 'Topics'),
-          _placeholderRoute('/topics/:id', 'Topic'),
+          GoRoute(
+            path: '/tools/:id',
+            builder: (context, state) =>
+                ToolDetailScreen(id: int.tryParse(state.pathParameters['id']!)),
+          ),
+          // The topics belong to the `Инструменты` tab but are not its list:
+          // pushed from the tools (or home), so back returns there.
+          GoRoute(
+            path: AppRoutes.topics,
+            builder: (context, state) => const TopicsScreen(),
+          ),
+          GoRoute(
+            path: '/topics/:id',
+            builder: (context, state) => TopicDetailScreen(
+              id: int.tryParse(state.pathParameters['id']!),
+            ),
+          ),
           _placeholderRoute('/diary/:id', 'Diary entry'),
           GoRoute(
             path: '/articles/:id',

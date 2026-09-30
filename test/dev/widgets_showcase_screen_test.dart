@@ -47,13 +47,33 @@ void main() {
       ToolListCard,
       ThemeListCard,
     ]) {
+      // The plain variant of each; ToolListCard also has one with a cover.
+      final card = find.byWidgetPredicate(
+        (w) => w.runtimeType == type && !(w is ToolListCard && w.cover != null),
+      );
       await tester.scrollUntilVisible(
-        find.byType(type),
+        card,
         200,
         scrollable: find.byType(Scrollable).first,
       );
-      expect(find.byType(type), findsOneWidget);
+      expect(card, findsOneWidget);
     }
+  });
+
+  testWidgets('showcase has a ToolListCard with a cover', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(theme: AppTheme.light, home: const WidgetsShowcaseScreen()),
+    );
+
+    final withCover = find.byWidgetPredicate(
+      (w) => w is ToolListCard && w.cover != null,
+    );
+    await tester.scrollUntilVisible(
+      withCover,
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(withCover, findsOneWidget);
   });
 
   testWidgets('ThemeListCard demo toggles on tap', (tester) async {
