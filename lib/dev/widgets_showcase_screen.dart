@@ -53,6 +53,19 @@ class WidgetsShowcaseScreen extends StatelessWidget {
               ),
             ],
           ),
+          const _Section('AppGridButton — 3 grid columns whatever the label'),
+          AppGridButton(
+            label: 'Начать',
+            variant: AppButtonVariant.secondary,
+            trailingIcon: Icons.arrow_forward_rounded,
+            onPressed: () {},
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          AppGridButton(
+            label: 'Пройти верификацию',
+            trailingIcon: Icons.arrow_forward_rounded,
+            onPressed: () {},
+          ),
           const _Section('AppCard'),
           const AppCard(child: Text('Обводка grey 0.5px')),
           const SizedBox(height: AppSpacing.sm),
@@ -154,6 +167,18 @@ class WidgetsShowcaseScreen extends StatelessWidget {
           const Align(
             alignment: Alignment.centerLeft,
             child: ShareButton(text: 'Стресс, неудовлетворенность'),
+          ),
+          const _Section('TopBarIconButton — 24×24 glyph, 40px tap square'),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              TopBarIconButton(
+                icon: Icons.chevron_left,
+                tooltip: 'Назад',
+                onPressed: () {},
+              ),
+              const ShareButton(text: 'Стресс, неудовлетворенность'),
+            ],
           ),
           const _Section('LoadingIndicator'),
           const SizedBox(height: 80, child: LoadingIndicator()),

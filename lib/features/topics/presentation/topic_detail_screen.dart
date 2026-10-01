@@ -158,7 +158,10 @@ class _Content extends ConsumerWidget {
                 // the one of the featured topic on the list.
                 if (topic.subtitle.trim().isNotEmpty) ...[
                   const SizedBox(height: AppSpacing.md),
-                  Text(topic.subtitle, style: textTheme.bodyMedium),
+                  Text(
+                    bindShortWords(topic.subtitle),
+                    style: textTheme.bodyMedium,
+                  ),
                 ],
               ],
             ),

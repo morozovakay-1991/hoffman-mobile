@@ -11,6 +11,7 @@ void main() {
     );
 
     expect(find.byType(AppButton), findsWidgets);
+    expect(find.byType(AppGridButton), findsWidgets);
     expect(find.byType(AppCard), findsWidgets);
     expect(find.byType(AppTextField), findsWidgets);
   });

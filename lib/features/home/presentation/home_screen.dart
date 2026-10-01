@@ -469,16 +469,12 @@ class _DiarySection extends ConsumerWidget {
                     const SizedBox(height: AppSpacing.lg),
                     // TODO(figma): 612:7393 also shows the day's task, which
                     // GET /home does not return yet.
-                    SizedBox(
-                      width: AppButton.minWidth,
-                      height: HomeFeaturedItem.buttonHeight,
-                      child: AppButton(
-                        key: HomeScreen.diaryContinueKey,
-                        label: HomeText.continueDiary,
-                        variant: AppButtonVariant.secondary,
-                        trailingIcon: Icons.arrow_forward_rounded,
-                        onPressed: () => context.go(AppRoutes.diary),
-                      ),
+                    AppGridButton(
+                      key: HomeScreen.diaryContinueKey,
+                      label: HomeText.continueDiary,
+                      variant: AppButtonVariant.secondary,
+                      trailingIcon: Icons.arrow_forward_rounded,
+                      onPressed: () => context.go(AppRoutes.diary),
                     ),
                   ],
                 )
@@ -526,14 +522,11 @@ class _DiaryLocked extends ConsumerWidget {
         ),
         const SizedBox(height: AppSpacing.lg),
         if (needsVerification)
-          SizedBox(
-            height: HomeFeaturedItem.buttonHeight,
-            child: AppButton(
-              key: HomeScreen.diaryVerifyKey,
-              label: LockedOverlayText.verify,
-              trailingIcon: Icons.arrow_forward_rounded,
-              onPressed: () => context.push(AppRoutes.verification),
-            ),
+          AppGridButton(
+            key: HomeScreen.diaryVerifyKey,
+            label: LockedOverlayText.verify,
+            trailingIcon: Icons.arrow_forward_rounded,
+            onPressed: () => context.push(AppRoutes.verification),
           )
         else
           Text(

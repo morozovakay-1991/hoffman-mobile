@@ -38,6 +38,10 @@ void main() {
     ) async {
       final harness = MeditationsHarness();
       final container = await harness.open(tester, AppRoutes.meditation(1));
+      expectGridButton(
+        tester,
+        find.byKey(MeditationDetailScreen.playerButtonKey),
+      );
 
       await tapAndSettle(
         tester,

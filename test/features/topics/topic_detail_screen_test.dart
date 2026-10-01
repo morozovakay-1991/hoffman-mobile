@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hoffman/core/router/index.dart';
+import 'package:hoffman/core/theme/index.dart';
 import 'package:hoffman/core/widgets/index.dart';
 import 'package:hoffman/features/auth/index.dart';
 import 'package:hoffman/features/home/index.dart';
@@ -44,7 +45,10 @@ void main() {
 
       expect(inContent(find.text('Я жертва')), findsOneWidget);
       // The subtitle is its own line, apart from the title.
-      expect(inContent(find.text('Подзаголовок: Я жертва')), findsOneWidget);
+      expect(
+        inContent(find.text(bindShortWords('Подзаголовок: Я жертва'))),
+        findsOneWidget,
+      );
 
       final bodies = tester
           .widgetList<LegalDocumentBody>(

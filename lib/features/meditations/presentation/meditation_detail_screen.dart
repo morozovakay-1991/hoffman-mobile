@@ -146,23 +146,19 @@ class _Content extends ConsumerWidget {
                 if (meditation.shortDescription.isNotEmpty) ...[
                   const SizedBox(height: AppSpacing.md),
                   Text(
-                    meditation.shortDescription,
+                    bindShortWords(meditation.shortDescription),
                     style: textTheme.bodySmall?.copyWith(
                       color: AppColors.softBlack,
                     ),
                   ),
                 ],
                 const SizedBox(height: AppSpacing.lg),
-                SizedBox(
-                  width: AppButton.minWidth,
-                  height: HomeFeaturedItem.buttonHeight,
-                  child: AppButton(
-                    key: MeditationDetailScreen.playerButtonKey,
-                    label: MeditationsText.listen,
-                    trailingIcon: Icons.play_arrow_rounded,
-                    onPressed: () => context.push(
-                      MeditationDetailScreen.playerRoute(meditation.id),
-                    ),
+                AppGridButton(
+                  key: MeditationDetailScreen.playerButtonKey,
+                  label: MeditationsText.listen,
+                  trailingIcon: Icons.play_arrow_rounded,
+                  onPressed: () => context.push(
+                    MeditationDetailScreen.playerRoute(meditation.id),
                   ),
                 ),
               ],

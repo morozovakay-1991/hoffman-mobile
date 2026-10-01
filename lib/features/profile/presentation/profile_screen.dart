@@ -178,22 +178,21 @@ class _GraduateBlock extends ConsumerWidget {
                   SizedBox(
                     width: _descriptionWidth,
                     child: Text(
-                      'Пройдите верификацию и получите доступ к '
-                      'расширенным возможностям приложения',
+                      bindShortWords(
+                        'Пройдите верификацию и получите доступ к '
+                        'расширенным возможностям приложения',
+                      ),
                       style: textTheme.bodySmall,
                     ),
                   ),
                   const SizedBox(height: AppSpacing.lg),
-                  SizedBox(
-                    height: AuthSubmitButton.height,
-                    child: AppButton(
-                      key: ProfileScreen.startVerificationKey,
-                      label: 'Начать',
-                      variant: AppButtonVariant.secondary,
-                      trailingIcon: Icons.arrow_forward,
-                      onPressed: () =>
-                          context.push(AppRoutes.profileVerification),
-                    ),
+                  AppGridButton(
+                    key: ProfileScreen.startVerificationKey,
+                    label: 'Начать',
+                    variant: AppButtonVariant.secondary,
+                    trailingIcon: Icons.arrow_forward,
+                    onPressed: () =>
+                        context.push(AppRoutes.profileVerification),
                   ),
                 ],
               ),

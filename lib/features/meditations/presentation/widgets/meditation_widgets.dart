@@ -85,7 +85,9 @@ class MeditationShareButton extends StatelessWidget {
   }
 }
 
-/// Back chevron on the left, [trailing] (the share icon) on the right.
+/// Back chevron on the left, [trailing] (the share icon) on the right: the
+/// 40px Figma row with 16px sides. Both are [TopBarIconButton]s, so their
+/// 24×24 glyph boxes sit on the same center line, 16px from the edges.
 class MeditationTopBar extends StatelessWidget {
   const MeditationTopBar({
     required this.onBack,
@@ -94,8 +96,12 @@ class MeditationTopBar extends StatelessWidget {
     this.color = AppColors.basicBlack,
   });
 
-  static const double height = 48;
-  static const double iconSize = 24;
+  static const double height = TopBarIconButton.tapSize;
+  static const double iconSize = TopBarIconButton.iconSize;
+  static const IconData backIcon = Icons.chevron_left;
+
+  /// Figma's 16px side padding to the glyph, minus the tap square's inset.
+  static const double _sidePadding = AppSpacing.md - TopBarIconButton.inset;
 
   final VoidCallback onBack;
   final Widget? trailing;
@@ -103,18 +109,22 @@ class MeditationTopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: height,
-      child: Row(
-        children: [
-          IconButton(
-            tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-            icon: Icon(Icons.chevron_left, size: iconSize, color: color),
-            onPressed: onBack,
-          ),
-          const Spacer(),
-          ?trailing,
-        ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: _sidePadding),
+      child: SizedBox(
+        height: height,
+        child: Row(
+          children: [
+            TopBarIconButton(
+              icon: backIcon,
+              tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+              color: color,
+              onPressed: onBack,
+            ),
+            const Spacer(),
+            ?trailing,
+          ],
+        ),
       ),
     );
   }

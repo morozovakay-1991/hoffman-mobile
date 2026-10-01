@@ -5,8 +5,15 @@ import 'package:hoffman/core/widgets/app_badge.dart';
 // Content cards from the Figma `Components` section (node 1:2). Icons are the
 // closest Material Icons until the exact SVG assets are exported.
 
-/// Width of the details column and of the action link row in every card.
-const double _detailsWidth = 184;
+/// The square cover of [MeditationCard], [ArticleListCard] and
+/// [ThemeListCard] is this many [AppGrid] columns wide.
+const int _coverColumns = 3;
+
+/// Next to a cover on its left, the details column starts at
+/// [AppGrid.boundary] of this many columns and takes the rest of the card
+/// ([AppGrid.span] of the same count). Without a cover on its left (the
+/// article and tool cards), the details and the action link row end there.
+const int _detailsColumns = 4;
 const double _iconSize = 16;
 
 /// Space between the title (the header of a theme card) and the content
@@ -34,12 +41,13 @@ class MeditationCard extends StatelessWidget {
     this.onTap,
   });
 
-  static const double coverSize = 138;
+  static const int coverColumns = _coverColumns;
+  static const int detailsColumns = _detailsColumns;
   static const double playIconSize = 24;
 
   final String title;
 
-  /// Cover image, clipped to a [coverSize] square.
+  /// Cover image, clipped to a square [coverColumns] wide.
   final Widget cover;
 
   /// Duration text next to the clock icon, e.g. `25 минут`.
@@ -59,33 +67,24 @@ class MeditationCard extends StatelessWidget {
         children: [
           _CardTitle(title, isLocked: isLocked),
           const SizedBox(height: _titleGap),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox.square(
-                dimension: coverSize,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    ClipRect(child: cover),
-                    const Center(
-                      child: Icon(
-                        Icons.play_arrow_rounded,
-                        size: playIconSize,
-                        color: AppColors.background,
-                      ),
-                    ),
-                  ],
+          _CoverRow(
+            cover: Stack(
+              fit: StackFit.expand,
+              children: [
+                ClipRect(child: cover),
+                const Center(
+                  child: Icon(
+                    Icons.play_arrow_rounded,
+                    size: playIconSize,
+                    color: AppColors.background,
+                  ),
                 ),
-              ),
-              _DetailsColumn(
-                children: [
-                  _MetaRow(icon: Icons.watch_later, text: duration),
-                  _Description(description),
-                  _ActionLink(actionLabel),
-                ],
-              ),
+              ],
+            ),
+            details: [
+              _MetaRow(icon: Icons.watch_later, text: duration),
+              _Description(description),
+              _ActionLink(actionLabel),
             ],
           ),
         ],
@@ -113,11 +112,12 @@ class ArticleListCard extends StatelessWidget {
     this.onTap,
   });
 
-  static const Size coverSize = Size(138, 110);
+  static const int coverColumns = _coverColumns;
+  static const int detailsColumns = _detailsColumns;
 
   final String title;
 
-  /// Cover image, clipped to [coverSize].
+  /// Cover image, clipped to a square [coverColumns] wide.
   final Widget cover;
 
   /// Date text next to the calendar icon, e.g. `Март, 2025`.
@@ -142,33 +142,25 @@ class ArticleListCard extends StatelessWidget {
         children: [
           _CardTitle(title, isLocked: isLocked),
           const SizedBox(height: _titleGap),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _DetailsColumn(
-                children: [
-                  if (badge case final badge?)
-                    // TODO(figma): no `новое` badge in the mockups (article
-                    // list card 946:1583); the existing tinted variant stands
-                    // in, placed after the date until the design has one.
-                    Row(
-                      children: [
-                        Flexible(child: meta),
-                        const SizedBox(width: AppSpacing.sm),
-                        AppBadge(label: badge, variant: AppBadgeVariant.tinted),
-                      ],
-                    )
-                  else
-                    meta,
-                  _Description(description),
-                  _ActionLink(actionLabel),
-                ],
-              ),
-              SizedBox.fromSize(
-                size: coverSize,
-                child: ClipRect(child: cover),
-              ),
+          _CoverRow(
+            coverOnLeft: false,
+            cover: ClipRect(child: cover),
+            details: [
+              if (badge case final badge?)
+                // TODO(figma): no `новое` badge in the mockups (article list
+                // card 946:1583); the existing tinted variant stands in, at
+                // the right end of the date row (under the link's arrow).
+                Row(
+                  children: [
+                    Expanded(child: meta),
+                    const SizedBox(width: AppSpacing.sm),
+                    AppBadge(label: badge, variant: AppBadgeVariant.tinted),
+                  ],
+                )
+              else
+                meta,
+              _Description(description),
+              _ActionLink(actionLabel),
             ],
           ),
         ],
@@ -192,6 +184,8 @@ class ToolListCard extends StatelessWidget {
     super.key,
     this.onTap,
   });
+
+  static const int actionColumns = _detailsColumns;
 
   final String title;
   final String description;
@@ -224,7 +218,12 @@ class ToolListCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: _contentGap),
-          _ActionLink(actionLabel),
+          LayoutBuilder(
+            builder: (context, constraints) => SizedBox(
+              width: AppGrid.boundary(constraints.maxWidth, actionColumns),
+              child: _ActionLink(actionLabel),
+            ),
+          ),
         ],
       ),
     );
@@ -253,7 +252,8 @@ class ThemeListCard extends StatelessWidget {
     this.onActionTap,
   });
 
-  static const double coverSize = 130;
+  static const int coverColumns = _coverColumns;
+  static const int detailsColumns = _detailsColumns;
 
   /// `add_2` icon size (folded, node 2:420).
   static const double expandIconSize = 24;
@@ -269,7 +269,8 @@ class ThemeListCard extends StatelessWidget {
   final String title;
   final String subtitle;
 
-  /// Cover image, clipped to a [coverSize] square. Shown when expanded.
+  /// Cover image, clipped to a square [coverColumns] wide. Shown when
+  /// expanded.
   final Widget cover;
 
   /// Long text shown when expanded; separate paragraphs with `\n`.
@@ -310,26 +311,17 @@ class ThemeListCard extends StatelessWidget {
               ],
             ),
           ),
-          Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
+          Text(
+            bindShortWords(subtitle),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
           if (isExpanded) ...[
             const SizedBox(height: _titleGap),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox.square(
-                  dimension: coverSize,
-                  child: ClipRect(child: cover),
-                ),
-                _DetailsColumn(
-                  children: [
-                    _Description(body),
-                    _Tappable(
-                      onTap: onActionTap,
-                      child: _ActionLink(actionLabel),
-                    ),
-                  ],
-                ),
+            _CoverRow(
+              cover: ClipRect(child: cover),
+              details: [
+                _Description(body),
+                _Tappable(onTap: onActionTap, child: _ActionLink(actionLabel)),
               ],
             ),
           ],
@@ -475,30 +467,57 @@ class LockedMark extends StatelessWidget {
   }
 }
 
-/// The [_detailsWidth] column next to a cover, [_contentGap] between its
-/// elements. Its top lines up with the cover's top (the rows that hold it
-/// align their children to the start), and the taller of the two sets the
-/// card's bottom.
-class _DetailsColumn extends StatelessWidget {
-  const _DetailsColumn({required this.children});
+/// The square [_coverColumns] [cover] and the details column on the
+/// [AppGrid], [_contentGap] between the [details].
+///
+/// [coverOnLeft]: the cover is at the left edge and the details column
+/// starts at [AppGrid.boundary] of [_detailsColumns] (a one-column gap after
+/// the cover), running to the right edge. Otherwise the details column
+/// starts at the left edge and ends at that boundary; the cover is at the
+/// right edge. The tops line up, and the taller of the two sets the bottom.
+class _CoverRow extends StatelessWidget {
+  const _CoverRow({
+    required this.cover,
+    required this.details,
+    this.coverOnLeft = true,
+  });
 
-  final List<Widget> children;
+  final Widget cover;
+  final List<Widget> details;
+  final bool coverOnLeft;
 
   @override
   Widget build(BuildContext context) {
-    return Flexible(
-      child: SizedBox(
-        width: _detailsWidth,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            for (var i = 0; i < children.length; i++) ...[
-              if (i > 0) const SizedBox(height: _contentGap),
-              children[i],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final coverBox = SizedBox.square(
+          dimension: AppGrid.span(width, _coverColumns),
+          child: cover,
+        );
+        final detailsBox = SizedBox(
+          width: coverOnLeft
+              ? AppGrid.span(width, _detailsColumns)
+              : AppGrid.boundary(width, _detailsColumns),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (var i = 0; i < details.length; i++) ...[
+                if (i > 0) const SizedBox(height: _contentGap),
+                details[i],
+              ],
             ],
-          ],
-        ),
-      ),
+          ),
+        );
+
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: coverOnLeft
+              ? [coverBox, detailsBox]
+              : [detailsBox, coverBox],
+        );
+      },
     );
   }
 }
@@ -511,7 +530,7 @@ class _Description extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      text,
+      bindShortWords(text),
       style: Theme.of(context).textTheme.bodySmall
           ?.copyWith(color: AppColors.softBlack),
     );
@@ -541,7 +560,8 @@ class _MetaRow extends StatelessWidget {
 }
 
 /// "Text + arrow" action row — `meditation link` / `article link`
-/// (Figma nodes 2:121 / 2:130).
+/// (Figma nodes 2:121 / 2:130), as wide as its parent: the arrow sits at
+/// the parent's right edge.
 class _ActionLink extends StatelessWidget {
   const _ActionLink(this.label);
 
@@ -549,21 +569,18 @@ class _ActionLink extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: _detailsWidth,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Flexible(
-            child: Text(label, style: Theme.of(context).textTheme.labelMedium),
-          ),
-          const Icon(
-            Icons.arrow_forward_rounded,
-            size: _iconSize,
-            color: AppColors.basicBlack,
-          ),
-        ],
-      ),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Flexible(
+          child: Text(label, style: Theme.of(context).textTheme.labelMedium),
+        ),
+        const Icon(
+          Icons.arrow_forward_rounded,
+          size: _iconSize,
+          color: AppColors.basicBlack,
+        ),
+      ],
     );
   }
 }

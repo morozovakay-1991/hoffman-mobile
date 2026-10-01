@@ -150,3 +150,45 @@ class AppButton extends StatelessWidget {
     }
   }
 }
+
+/// An action [AppButton] of a content block (`Начать →`, `Слушать ▶`):
+/// [columns] [AppGrid] columns wide whatever its label (130px of the 360px
+/// Figma content for the default 3), at the mockup's fixed 28px height.
+///
+/// Takes its width from the incoming constraints, so it goes where the
+/// content width is bounded, e.g. a `Column` inside the screen margins.
+class AppGridButton extends StatelessWidget {
+  const AppGridButton({
+    required this.label,
+    required this.onPressed,
+    super.key,
+    this.variant = AppButtonVariant.primary,
+    this.trailingIcon,
+    this.columns = defaultColumns,
+  });
+
+  static const int defaultColumns = 3;
+  static const double height = 28;
+
+  final String label;
+  final VoidCallback? onPressed;
+  final AppButtonVariant variant;
+  final IconData? trailingIcon;
+  final int columns;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) => SizedBox(
+        width: AppGrid.span(constraints.maxWidth, columns),
+        height: height,
+        child: AppButton(
+          label: label,
+          variant: variant,
+          trailingIcon: trailingIcon,
+          onPressed: onPressed,
+        ),
+      ),
+    );
+  }
+}

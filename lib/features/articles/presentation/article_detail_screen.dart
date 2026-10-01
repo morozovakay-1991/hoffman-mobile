@@ -151,7 +151,7 @@ class _Content extends ConsumerWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          article.shortDescription,
+                          bindShortWords(article.shortDescription),
                           style: textTheme.bodySmall?.copyWith(
                             color: AppColors.softBlack,
                           ),
