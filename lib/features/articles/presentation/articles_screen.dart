@@ -80,12 +80,15 @@ class ArticlesScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: RefreshIndicator(
+        edgeOffset: padding.top,
         onRefresh: () => _refresh(context, ref),
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
-            // The status bar stays on white, as on the home screen.
-            SliverToBoxAdapter(child: SizedBox(height: padding.top)),
+            // With data the section cover runs up under the status bar;
+            // the loading and error states stay below it.
+            if (!catalog.hasValue)
+              SliverToBoxAdapter(child: SizedBox(height: padding.top)),
             body,
           ],
         ),
@@ -93,9 +96,6 @@ class ArticlesScreen extends ConsumerWidget {
     );
   }
 }
-
-/// Side padding of the cards, as in the home section.
-const EdgeInsets _cardPadding = EdgeInsets.symmetric(horizontal: AppSpacing.md);
 
 class _Catalog extends StatelessWidget {
   const _Catalog(this.catalog);
@@ -111,6 +111,7 @@ class _Catalog extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         HomeSectionCover(
+          underStatusBar: true,
           image: HomeScreen.articlesCover,
           imageUrl: featured?.coverImageUrl,
           title: HomeText.articles,
@@ -136,24 +137,24 @@ class _Catalog extends StatelessWidget {
             color: AppColors.lightBlueTint,
             onTap: () => open(featured),
           ),
-        for (final item in catalog.items)
-          Padding(
-            padding: _cardPadding,
-            child: ArticleListCard(
-              key: ArticlesScreen.cardKey(item.id),
-              title: item.title,
-              cover: HomeCoverImage(
-                url: item.coverImageUrl,
-                fallback: HomeScreen.articlesCover,
+        ContentCardList(
+          children: [
+            for (final item in catalog.items)
+              ArticleListCard(
+                key: ArticlesScreen.cardKey(item.id),
+                title: item.title,
+                cover: HomeCoverImage(
+                  url: item.coverImageUrl,
+                  fallback: HomeScreen.articlesCover,
+                ),
+                date: HomeText.monthYear(item.publishedAt),
+                description: item.shortDescription,
+                actionLabel: HomeText.read,
+                badge: HomeText.articleBadge(isNew: item.isNew),
+                onTap: () => open(item),
               ),
-              date: HomeText.monthYear(item.publishedAt),
-              description: item.shortDescription,
-              actionLabel: HomeText.read,
-              badge: HomeText.articleBadge(isNew: item.isNew),
-              onTap: () => open(item),
-            ),
-          ),
-        const SizedBox(height: AppSpacing.xl),
+          ],
+        ),
       ],
     );
   }

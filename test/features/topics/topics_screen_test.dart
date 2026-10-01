@@ -32,6 +32,13 @@ void main() {
         tester.widget<HomeSectionCover>(find.byType(HomeSectionCover)).title,
         HomeText.topics,
       );
+      expect(
+        tester
+            .widget<HomeSectionCover>(find.byType(HomeSectionCover))
+            .underStatusBar,
+        isTrue,
+      );
+      expect(tester.getTopLeft(find.byType(HomeSectionCover)).dy, 0);
       final featured = tester.widget<HomeFeaturedItem>(
         find.byKey(TopicsScreen.featuredKey),
       );

@@ -9,6 +9,14 @@ import 'package:hoffman/core/widgets/app_badge.dart';
 const double _detailsWidth = 184;
 const double _iconSize = 16;
 
+/// Space between the title (the header of a theme card) and the content
+/// block under it.
+const double _titleGap = AppSpacing.lg;
+
+/// Space between two elements of the content block: the date or duration,
+/// the description and the action link.
+const double _contentGap = AppSpacing.md;
+
 /// Meditation card, Figma node 132:5273 (`meditation card`).
 ///
 /// Title on top; below it the square [cover] with a play icon (left) and the
@@ -46,10 +54,11 @@ class MeditationCard extends StatelessWidget {
     return _Tappable(
       onTap: onTap,
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _CardTitle(title, isLocked: isLocked),
-          const SizedBox(height: AppSpacing.xl),
+          const SizedBox(height: _titleGap),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -87,7 +96,7 @@ class MeditationCard extends StatelessWidget {
 
 /// Article list card, Figma node 132:5127 (`article list card`).
 ///
-/// Top divider, then the title; below it the details column (date,
+/// Title; below it the details column (date,
 /// description, action link) on the left and the [cover] on the right. The
 /// whole card handles [onTap]. [isLocked] adds a [LockedMark] to the title;
 /// [badge] adds an [AppBadge] ([AppBadgeVariant.tinted]) after the date.
@@ -125,13 +134,14 @@ class ArticleListCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final meta = _MetaRow(icon: Icons.calendar_month, text: date);
 
-    return _ListCard(
+    return _Tappable(
       onTap: onTap,
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _CardTitle(title, isLocked: isLocked),
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: _titleGap),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -169,10 +179,10 @@ class ArticleListCard extends StatelessWidget {
 
 /// Tool list card, Figma node 132:5143 (`tool list card`).
 ///
-/// Top divider, title, then the description with a [tag] [AppBadge]
-/// ([AppBadgeVariant.tinted]) on its right, then the action link. The whole
-/// card handles [onTap]. [cover] adds a [coverSize] thumbnail on the left
-/// of the description. Tools are open to everyone, so it has no lock mark.
+/// Title, then the description with a [tag] [AppBadge]
+/// ([AppBadgeVariant.tinted]) on its right, then the action link. No cover:
+/// the mockup has no slot for one. The whole card handles [onTap]. Tools
+/// are open to everyone, so it has no lock mark.
 class ToolListCard extends StatelessWidget {
   const ToolListCard({
     required this.title,
@@ -180,18 +190,10 @@ class ToolListCard extends StatelessWidget {
     required this.tag,
     required this.actionLabel,
     super.key,
-    this.cover,
     this.onTap,
   });
 
-  // TODO(figma): the card has no thumbnail in the mockup (132:5143); ТЗ 5.5
-  // asks for one on the tools list, so its size is a stand-in.
-  static const double coverSize = 88;
-
   final String title;
-
-  /// Cover thumbnail, clipped to a [coverSize] square; `null` hides it.
-  final Widget? cover;
   final String description;
 
   /// `null` hides the badge (e.g. a tool without a stage).
@@ -201,23 +203,17 @@ class ToolListCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _ListCard(
+    return _Tappable(
       onTap: onTap,
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _CardTitle(title),
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: _titleGap),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (cover case final cover?) ...[
-                SizedBox.square(
-                  dimension: coverSize,
-                  child: ClipRect(child: cover),
-                ),
-                const SizedBox(width: AppSpacing.md),
-              ],
               Expanded(child: _Description(description)),
               if (tag case final tag?) ...[
                 // TODO(figma): the mockup gives the text a fixed 231px width;
@@ -227,7 +223,7 @@ class ToolListCard extends StatelessWidget {
               ],
             ],
           ),
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: _contentGap),
           _ActionLink(actionLabel),
         ],
       ),
@@ -238,7 +234,7 @@ class ToolListCard extends StatelessWidget {
 /// Theme list card, Figma nodes 132:5174 (`theme list card folded`) and
 /// 132:5157 (`theme list card unfolded`).
 ///
-/// Top divider in both states. Folded: title with a `+` icon and the
+/// Folded: title with a `+` icon and the
 /// [subtitle]. Expanded: a `–` icon instead of `+`, then the [cover] next to
 /// the multi-paragraph [body] and the action link. The whole card handles
 /// [onTap]; the owner toggles [isExpanded]. With [onActionTap] set, the
@@ -285,9 +281,10 @@ class ThemeListCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _ListCard(
+    return _Tappable(
       onTap: onTap,
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ConstrainedBox(
@@ -315,7 +312,7 @@ class ThemeListCard extends StatelessWidget {
           ),
           Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
           if (isExpanded) ...[
-            const SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: _titleGap),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -342,32 +339,68 @@ class ThemeListCard extends StatelessWidget {
   }
 }
 
-/// List card body with the Figma top divider (`Line 9`): a 0.5px
-/// `basicBlack` line, then `spacing/md` above and below the [child].
-class _ListCard extends StatelessWidget {
-  const _ListCard({required this.onTap, required this.child});
+/// Divider between the cards of a list, Figma `Line 9`: a full-width
+/// 0.5px `basicBlack` line.
+class ContentDivider extends StatelessWidget {
+  const ContentDivider({super.key});
 
-  static const double dividerThickness = 0.5;
-
-  final VoidCallback? onTap;
-  final Widget child;
+  static const double thickness = 0.5;
 
   @override
   Widget build(BuildContext context) {
-    return _Tappable(
-      onTap: onTap,
+    return const Divider(
+      height: thickness,
+      thickness: thickness,
+      color: AppColors.basicBlack,
+    );
+  }
+}
+
+/// A list of content cards ([MeditationCard], [ArticleListCard],
+/// [ToolListCard], [ThemeListCard]) laid out edge to edge.
+///
+/// A [ContentDivider] runs the full width only between two cards — none
+/// above the first or below the last — with [gap] on both of its sides.
+/// The cards get the [AppGrid.margin] sides; the list itself adds [top]
+/// and [bottom] (by default `spacing/xl` between the featured item or the
+/// cover above and the next section below). Without [children] it takes
+/// no space at all.
+class ContentCardList extends StatelessWidget {
+  const ContentCardList({
+    required this.children,
+    super.key,
+    this.top = AppSpacing.xl,
+    this.bottom = AppSpacing.xl,
+  });
+
+  /// Space between a divider and the card above or below it.
+  static const double gap = AppSpacing.md;
+
+  final List<Widget> children;
+  final double top;
+  final double bottom;
+
+  @override
+  Widget build(BuildContext context) {
+    if (children.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: EdgeInsets.only(top: top, bottom: bottom),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Divider(
-            height: dividerThickness,
-            thickness: dividerThickness,
-            color: AppColors.basicBlack,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          child,
-          const SizedBox(height: AppSpacing.md),
+          for (final (i, card) in children.indexed) ...[
+            if (i > 0) ...[
+              const SizedBox(height: gap),
+              const ContentDivider(),
+              const SizedBox(height: gap),
+            ],
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppGrid.margin),
+              child: card,
+            ),
+          ],
         ],
       ),
     );
@@ -442,7 +475,10 @@ class LockedMark extends StatelessWidget {
   }
 }
 
-/// The [_detailsWidth] column next to a cover, with `spacing/md` gaps.
+/// The [_detailsWidth] column next to a cover, [_contentGap] between its
+/// elements. Its top lines up with the cover's top (the rows that hold it
+/// align their children to the start), and the taller of the two sets the
+/// card's bottom.
 class _DetailsColumn extends StatelessWidget {
   const _DetailsColumn({required this.children});
 
@@ -457,7 +493,7 @@ class _DetailsColumn extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             for (var i = 0; i < children.length; i++) ...[
-              if (i > 0) const SizedBox(height: AppSpacing.md),
+              if (i > 0) const SizedBox(height: _contentGap),
               children[i],
             ],
           ],

@@ -274,33 +274,19 @@ class _RelatedTools extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.md,
-        AppSpacing.xl,
-        AppSpacing.md,
-        0,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const _Heading(TopicsText.relatedTools),
-          const SizedBox(height: AppSpacing.lg),
-          for (final tool in tools)
-            ToolListCard(
-              key: TopicDetailScreen.toolCardKey(tool.id),
-              title: tool.title,
-              cover: HomeCoverImage(
-                url: tool.coverImageUrl,
-                fallback: HomeScreen.toolsCover,
-              ),
-              description: tool.shortDescription,
-              tag: tool.stageTag,
-              actionLabel: HomeText.read,
-              onTap: () => context.push(AppRoutes.tool(tool.id)),
-            ),
-        ],
-      ),
+    return _RelatedBlock(
+      heading: TopicsText.relatedTools,
+      children: [
+        for (final tool in tools)
+          ToolListCard(
+            key: TopicDetailScreen.toolCardKey(tool.id),
+            title: tool.title,
+            description: tool.shortDescription,
+            tag: tool.stageTag,
+            actionLabel: HomeText.read,
+            onTap: () => context.push(AppRoutes.tool(tool.id)),
+          ),
+      ],
     );
   }
 }
@@ -312,35 +298,49 @@ class _RelatedMeditations extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return _RelatedBlock(
+      heading: TopicsText.relatedMeditations,
+      children: [
+        for (final meditation in meditations)
+          MeditationCard(
+            key: TopicDetailScreen.meditationCardKey(meditation.id),
+            title: meditation.title,
+            cover: HomeCoverImage(
+              url: meditation.coverImageUrl,
+              fallback: HomeScreen.meditationsCover,
+            ),
+            duration: HomeText.duration(meditation.durationSeconds),
+            description: meditation.shortDescription,
+            actionLabel: MeditationsText.start,
+            isLocked: meditation.isLocked,
+            onTap: () => context.push(AppRoutes.meditation(meditation.id)),
+          ),
+      ],
+    );
+  }
+}
+
+/// A [_Heading] over a [ContentCardList] of related content: dividers only
+/// between the cards, edge to edge. The next block (or the end of the
+/// screen) brings its own space below.
+class _RelatedBlock extends StatelessWidget {
+  const _RelatedBlock({required this.heading, required this.children});
+
+  final String heading;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.md,
-        AppSpacing.xl,
-        AppSpacing.md,
-        0,
-      ),
+      padding: const EdgeInsets.only(top: AppSpacing.xl),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const _Heading(TopicsText.relatedMeditations),
-          for (final meditation in meditations) ...[
-            const SizedBox(height: AppSpacing.lg),
-            const HomeDivider(),
-            const SizedBox(height: AppSpacing.lg),
-            MeditationCard(
-              key: TopicDetailScreen.meditationCardKey(meditation.id),
-              title: meditation.title,
-              cover: HomeCoverImage(
-                url: meditation.coverImageUrl,
-                fallback: HomeScreen.meditationsCover,
-              ),
-              duration: HomeText.duration(meditation.durationSeconds),
-              description: meditation.shortDescription,
-              actionLabel: MeditationsText.start,
-              isLocked: meditation.isLocked,
-              onTap: () => context.push(AppRoutes.meditation(meditation.id)),
-            ),
-          ],
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppGrid.margin),
+            child: _Heading(heading),
+          ),
+          ContentCardList(top: AppSpacing.lg, bottom: 0, children: children),
         ],
       ),
     );

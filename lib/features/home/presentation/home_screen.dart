@@ -232,21 +232,15 @@ class _Feed extends StatelessWidget {
         _TopicsSection(summary.topics),
         _DiarySection(summary.diary),
         _ArticlesSection(summary.articles),
-        const SizedBox(height: AppSpacing.xl),
       ],
     );
   }
 }
 
-/// Padding around a list card after the featured item (612:7256).
+/// Padding around the diary block (612:7256).
 const EdgeInsets _cardPadding = EdgeInsets.symmetric(
   horizontal: AppSpacing.md,
   vertical: AppSpacing.xl,
-);
-
-/// Horizontal padding of the list cards that draw their own divider.
-const EdgeInsets _listCardPadding = EdgeInsets.symmetric(
-  horizontal: AppSpacing.md,
 );
 
 class _MeditationsSection extends StatelessWidget {
@@ -289,25 +283,23 @@ class _MeditationsSection extends StatelessWidget {
             isLocked: featured.isLocked,
             onTap: () => open(featured),
           ),
-        for (final (i, item) in section.items.indexed) ...[
-          // No line above the first card when it heads the section.
-          if (featured != null || i > 0) const HomeDivider(),
-          Padding(
-            padding: _cardPadding,
-            child: MeditationCard(
-              title: item.title,
-              cover: HomeCoverImage(
-                url: item.coverImageUrl,
-                fallback: HomeScreen.meditationsCover,
+        ContentCardList(
+          children: [
+            for (final item in section.items)
+              MeditationCard(
+                title: item.title,
+                cover: HomeCoverImage(
+                  url: item.coverImageUrl,
+                  fallback: HomeScreen.meditationsCover,
+                ),
+                duration: HomeText.duration(item.durationSeconds),
+                description: item.shortDescription,
+                actionLabel: HomeText.start,
+                isLocked: item.isLocked,
+                onTap: () => open(item),
               ),
-              duration: HomeText.duration(item.durationSeconds),
-              description: item.shortDescription,
-              actionLabel: HomeText.start,
-              isLocked: item.isLocked,
-              onTap: () => open(item),
-            ),
-          ),
-        ],
+          ],
+        ),
       ],
     );
   }
@@ -354,17 +346,18 @@ class _ToolsSection extends StatelessWidget {
             actionVariant: AppButtonVariant.secondary,
             onTap: () => open(featured),
           ),
-        for (final item in section.items)
-          Padding(
-            padding: _listCardPadding,
-            child: ToolListCard(
-              title: item.title,
-              description: item.shortDescription,
-              tag: item.stageTag,
-              actionLabel: HomeText.read,
-              onTap: () => open(item),
-            ),
-          ),
+        ContentCardList(
+          children: [
+            for (final item in section.items)
+              ToolListCard(
+                title: item.title,
+                description: item.shortDescription,
+                tag: item.stageTag,
+                actionLabel: HomeText.read,
+                onTap: () => open(item),
+              ),
+          ],
+        ),
       ],
     );
   }
@@ -418,25 +411,26 @@ class _TopicsSectionState extends State<_TopicsSection> {
             color: _TopicsSection.featuredColor,
             onTap: () => open(featured),
           ),
-        for (final item in section.items)
-          Padding(
-            padding: _listCardPadding,
-            child: ThemeListCard(
-              title: item.title,
-              subtitle: item.subtitle,
-              cover: HomeCoverImage(
-                url: item.coverImageUrl,
-                fallback: HomeScreen.topicsCover,
+        ContentCardList(
+          children: [
+            for (final item in section.items)
+              ThemeListCard(
+                title: item.title,
+                subtitle: item.subtitle,
+                cover: HomeCoverImage(
+                  url: item.coverImageUrl,
+                  fallback: HomeScreen.topicsCover,
+                ),
+                body: item.fullDescription ?? '',
+                actionLabel: HomeText.read,
+                isExpanded: _expandedId == item.id,
+                onTap: () => setState(
+                  () => _expandedId = _expandedId == item.id ? null : item.id,
+                ),
+                onActionTap: () => open(item),
               ),
-              body: item.fullDescription ?? '',
-              actionLabel: HomeText.read,
-              isExpanded: _expandedId == item.id,
-              onTap: () => setState(
-                () => _expandedId = _expandedId == item.id ? null : item.id,
-              ),
-              onActionTap: () => open(item),
-            ),
-          ),
+          ],
+        ),
       ],
     );
   }
@@ -591,23 +585,24 @@ class _ArticlesSection extends StatelessWidget {
             isLocked: featured.isLocked,
             onTap: () => open(featured),
           ),
-        for (final item in section.items)
-          Padding(
-            padding: _listCardPadding,
-            child: ArticleListCard(
-              title: item.title,
-              cover: HomeCoverImage(
-                url: item.coverImageUrl,
-                fallback: HomeScreen.articlesCover,
+        ContentCardList(
+          children: [
+            for (final item in section.items)
+              ArticleListCard(
+                title: item.title,
+                cover: HomeCoverImage(
+                  url: item.coverImageUrl,
+                  fallback: HomeScreen.articlesCover,
+                ),
+                date: HomeText.monthYear(item.publishedAt),
+                description: item.shortDescription,
+                actionLabel: HomeText.read,
+                badge: HomeText.articleBadge(isNew: item.isNew),
+                isLocked: item.isLocked,
+                onTap: () => open(item),
               ),
-              date: HomeText.monthYear(item.publishedAt),
-              description: item.shortDescription,
-              actionLabel: HomeText.read,
-              badge: HomeText.articleBadge(isNew: item.isNew),
-              isLocked: item.isLocked,
-              onTap: () => open(item),
-            ),
-          ),
+          ],
+        ),
       ],
     );
   }

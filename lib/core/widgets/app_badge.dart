@@ -25,10 +25,17 @@ class AppBadge extends StatelessWidget {
   });
 
   static const double borderWidth = 0.5;
+  static const double verticalPadding = 3.5;
 
-  // TODO(figma): replace with the exported `section arrow` SVG (node 2:24,
-  // 6×10.7px) once SVG assets are added to the project.
-  static const double arrowSize = 16;
+  /// The `section arrow` box (Figma 2:35): 6×10.7px, [arrowGap] after the
+  /// label, the same [AppSpacing.sm] padding after it as before the label.
+  static const Size arrowSize = Size(6, 10.7);
+  static const double arrowGap = AppSpacing.sm;
+
+  // TODO(figma): replace with the exported `section arrow` SVG once SVG
+  // assets are added to the project. Until then the Material chevron at
+  // this size has a glyph of the arrow's size, cropped to it.
+  static const double _chevronSize = 23;
 
   final String label;
   final AppBadgeVariant variant;
@@ -45,23 +52,39 @@ class AppBadge extends StatelessWidget {
         border: isOutlined ? Border.all(width: borderWidth) : null,
       ),
       child: Padding(
-        // Figma: spacing/xxs top, 5px bottom, spacing/sm sides.
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.sm,
-          AppSpacing.xxs,
-          AppSpacing.sm,
-          5,
+        // Figma: spacing/xxs top and 5px bottom, spacing/sm sides. The same
+        // 7px split evenly, so the content sits in the vertical center.
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: verticalPadding,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(label, style: Theme.of(context).textTheme.labelMedium),
+            Text(
+              label,
+              style: Theme.of(context).textTheme.labelMedium,
+              // Line spacing split evenly above and below the glyphs, so the
+              // text centers on the arrow and in the badge.
+              textHeightBehavior: const TextHeightBehavior(
+                leadingDistribution: TextLeadingDistribution.even,
+              ),
+            ),
             if (isOutlined) ...[
-              const SizedBox(width: AppSpacing.sm),
-              const Icon(
-                Icons.chevron_right_rounded,
+              const SizedBox(width: arrowGap),
+              // The icon's own empty margins would widen the gap before the
+              // arrow and the padding after it.
+              SizedBox.fromSize(
                 size: arrowSize,
-                color: AppColors.basicBlack,
+                child: const OverflowBox(
+                  maxWidth: _chevronSize,
+                  maxHeight: _chevronSize,
+                  child: Icon(
+                    Icons.chevron_right_rounded,
+                    size: _chevronSize,
+                    color: AppColors.basicBlack,
+                  ),
+                ),
               ),
             ],
           ],

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hoffman/core/router/index.dart';
+import 'package:hoffman/core/theme/index.dart';
 import 'package:hoffman/core/widgets/index.dart';
 import 'package:hoffman/features/articles/index.dart';
 import 'package:hoffman/features/auth/index.dart';
@@ -33,6 +34,8 @@ void main() {
         find.byType(HomeSectionCover),
       );
       expect(sectionCover.title, HomeText.articles);
+      expect(sectionCover.underStatusBar, isTrue);
+      expect(tester.getTopLeft(find.byType(HomeSectionCover)).dy, 0);
       expect(sectionCover.onSeeAll, isNull);
       expect(sectionCover.onTap, isNotNull);
 
@@ -61,6 +64,27 @@ void main() {
       expect((cards.first.cover as HomeCoverImage).url, Uri.parse(cover));
       // featured is never repeated among the cards.
       expect(find.text('Что такое Процесс?'), findsOneWidget);
+
+      // featured → 32 → card → 16 → line → 16 → card → 32: one divider,
+      // only between the cards.
+      final featuredRect = tester.getRect(
+        find.byKey(ArticlesScreen.featuredKey),
+      );
+      final first = tester.getRect(find.byKey(ArticlesScreen.cardKey(2)));
+      final second = tester.getRect(
+        find.byKey(ArticlesScreen.cardKey(3), skipOffstage: false),
+      );
+      final dividers = find.byType(ContentDivider, skipOffstage: false);
+      expect(dividers, findsOneWidget);
+      final line = tester.getRect(dividers);
+      expect(first.top - featuredRect.bottom, AppSpacing.xl);
+      expect(line.top - first.bottom, AppSpacing.md);
+      expect(second.top - line.bottom, AppSpacing.md);
+      expect(line.width, tester.getSize(find.byType(ArticlesScreen)).width);
+      final list = tester.getRect(
+        find.byType(ContentCardList, skipOffstage: false),
+      );
+      expect(list.bottom - second.bottom, AppSpacing.xl);
     });
 
     testWidgets('is_new puts the "новое" badge on that card only', (

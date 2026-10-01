@@ -25,6 +25,8 @@ void main() {
         find.byType(HomeSectionCover),
       );
       expect(cover.title, HomeText.meditations);
+      expect(cover.underStatusBar, isTrue);
+      expect(tester.getTopLeft(find.byType(HomeSectionCover)).dy, 0);
       expect(cover.onSeeAll, isNull);
       expect(cover.onTap, isNotNull);
       expect(find.byType(AppBadge), findsNothing);
