@@ -63,7 +63,7 @@ class HomeSectionCover extends StatelessWidget {
   static const double height = 350;
 
   /// Width of the subtitle in [AppGrid] columns.
-  static const int subtitleColumns = 4;
+  static const int subtitleColumns = 6;
 
   /// Figma `Text/Display` has -4% tracking on the covers.
   static const double _titleTracking = -1.28;
@@ -196,7 +196,7 @@ class HomeSectionCover extends StatelessWidget {
                   builder: (context, constraints) => SizedBox(
                     width: AppGrid.span(constraints.maxWidth, subtitleColumns),
                     child: Text(
-                      subtitle,
+                      bindShortWords(subtitle),
                       style: textTheme.labelLarge?.copyWith(
                         color: foreground,
                         height: _subtitleLineHeight,
@@ -232,7 +232,8 @@ class HomeSectionCover extends StatelessWidget {
 /// description runs up to the start of column [descriptionColumns] + 1
 /// (230px of 360), the [trailing] detail hugs its content at the right
 /// edge, and the button below is always [buttonColumns] wide (130px of 360)
-/// whatever its label.
+/// whatever its label. The [subtitle] under the title is
+/// [subtitleColumns] wide, like the section cover's.
 // The diary's featured card (not built yet) is the one exception: its
 // description takes 7 columns.
 class HomeFeaturedItem extends StatelessWidget {
@@ -250,9 +251,10 @@ class HomeFeaturedItem extends StatelessWidget {
     this.isLocked = false,
   });
 
-  static const double buttonHeight = 28;
+  static const double buttonHeight = AppGridButton.height;
+  static const int subtitleColumns = HomeSectionCover.subtitleColumns;
   static const int descriptionColumns = 5;
-  static const int buttonColumns = 3;
+  static const int buttonColumns = AppGridButton.defaultColumns;
   static const int _descriptionMaxLines = 7;
 
   final String title;
@@ -296,7 +298,15 @@ class HomeFeaturedItem extends StatelessWidget {
               ),
               if (subtitle != null && subtitle.isNotEmpty) ...[
                 const SizedBox(height: AppSpacing.sm),
-                Text(subtitle, style: textTheme.bodySmall),
+                LayoutBuilder(
+                  builder: (context, constraints) => SizedBox(
+                    width: AppGrid.span(constraints.maxWidth, subtitleColumns),
+                    child: Text(
+                      bindShortWords(subtitle),
+                      style: textTheme.bodySmall,
+                    ),
+                  ),
+                ),
               ],
               const SizedBox(height: AppSpacing.lg),
               LayoutBuilder(
@@ -313,7 +323,7 @@ class HomeFeaturedItem extends StatelessWidget {
                           SizedBox(
                             width: AppGrid.boundary(width, descriptionColumns),
                             child: Text(
-                              description,
+                              bindShortWords(description),
                               maxLines: _descriptionMaxLines,
                               overflow: TextOverflow.ellipsis,
                               style: textTheme.bodySmall?.copyWith(
@@ -326,15 +336,11 @@ class HomeFeaturedItem extends StatelessWidget {
                       ),
                       const SizedBox(height: AppSpacing.lg),
                       // Fixed width whatever the label, no hugging.
-                      SizedBox(
-                        width: AppGrid.span(width, buttonColumns),
-                        height: buttonHeight,
-                        child: AppButton(
-                          label: actionLabel,
-                          variant: actionVariant,
-                          trailingIcon: actionIcon,
-                          onPressed: onTap,
-                        ),
+                      AppGridButton(
+                        label: actionLabel,
+                        variant: actionVariant,
+                        trailingIcon: actionIcon,
+                        onPressed: onTap,
                       ),
                     ],
                   );

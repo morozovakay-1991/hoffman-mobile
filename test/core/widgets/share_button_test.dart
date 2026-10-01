@@ -30,7 +30,7 @@ void main() {
         const ShareButton(text: 'Текст', color: AppColors.background),
       );
 
-      final icon = tester.widget<Icon>(find.byIcon(Icons.ios_share));
+      final icon = tester.widget<Icon>(find.byIcon(ShareButton.icon));
       expect(icon.size, ShareButton.iconSize);
       expect(icon.color, AppColors.background);
       expect(find.byTooltip(ShareButton.label), findsOneWidget);

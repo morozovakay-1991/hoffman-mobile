@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoffman/core/services/text_sharer.dart';
 import 'package:hoffman/core/theme/index.dart';
+import 'package:hoffman/core/widgets/top_bar_icon_button.dart';
 
-/// The share icon of the content screens: opens the system share sheet with
+/// The share icon of the content screens, Figma `sharing` (2:236) in a
+/// [TopBarIconButton]: opens the system share sheet with
 /// [text] ([subject] for the apps that take one, e.g. mail). A failure
 /// shows a snackbar.
 class ShareButton extends ConsumerWidget {
@@ -16,7 +18,8 @@ class ShareButton extends ConsumerWidget {
 
   static const String label = 'Поделиться';
   static const String failed = 'Не удалось поделиться';
-  static const double iconSize = 24;
+  static const double iconSize = TopBarIconButton.iconSize;
+  static const IconData icon = Icons.share;
 
   final String text;
   final String? subject;
@@ -43,9 +46,10 @@ class ShareButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return IconButton(
+    return TopBarIconButton(
+      icon: icon,
       tooltip: label,
-      icon: Icon(Icons.ios_share, size: iconSize, color: color),
+      color: color,
       onPressed: () => _share(context, ref),
     );
   }

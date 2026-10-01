@@ -11,6 +11,7 @@ import 'package:hoffman/core/config/feature_flags.dart';
 import 'package:hoffman/core/network/index.dart';
 import 'package:hoffman/core/router/index.dart';
 import 'package:hoffman/core/services/external_url_launcher.dart';
+import 'package:hoffman/core/theme/index.dart';
 import 'package:hoffman/core/widgets/index.dart';
 import 'package:hoffman/features/onboarding/index.dart';
 import 'package:hoffman/main.dart';
@@ -196,6 +197,28 @@ void useFigmaViewport(WidgetTester tester, {double pixelRatio = 3}) {
     ..devicePixelRatio = pixelRatio
     ..padding = FakeViewPadding(top: 49 * pixelRatio, bottom: 34 * pixelRatio);
   addTearDown(tester.view.reset);
+}
+
+/// Checks that [button] (found once) is an [AppGridButton] action at the
+/// screen margin, exactly [columns] [AppGrid] columns of the [screenWidth]
+/// content wide, at its 28px height.
+void expectGridButton(
+  WidgetTester tester,
+  Finder button, {
+  int columns = AppGridButton.defaultColumns,
+  double screenWidth = 393,
+}) {
+  expect(button, findsOneWidget);
+  expect(tester.widget(button), isA<AppGridButton>());
+  final rect = tester.getRect(
+    find.descendant(of: button, matching: find.byType(AppButton)),
+  );
+  expect(rect.left, AppGrid.margin);
+  expect(
+    rect.width,
+    closeTo(AppGrid.span(screenWidth - 2 * AppGrid.margin, columns), 0.01),
+  );
+  expect(rect.height, AppGridButton.height);
 }
 
 /// Pumps the whole app ([HoffmanApp]) and lets the splash finish, so the

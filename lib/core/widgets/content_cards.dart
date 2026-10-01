@@ -310,7 +310,10 @@ class ThemeListCard extends StatelessWidget {
               ],
             ),
           ),
-          Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
+          Text(
+            bindShortWords(subtitle),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
           if (isExpanded) ...[
             const SizedBox(height: _titleGap),
             Row(
@@ -511,7 +514,7 @@ class _Description extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      text,
+      bindShortWords(text),
       style: Theme.of(context).textTheme.bodySmall
           ?.copyWith(color: AppColors.softBlack),
     );

@@ -448,7 +448,7 @@ void main() {
         findsNothing,
       );
 
-      await tester.tap(find.text(HomeText.meditationsSubtitle));
+      await tester.tap(find.text(bindShortWords(HomeText.meditationsSubtitle)));
       await tester.pumpAndSettle();
       expect(currentPath(container), AppRoutes.home);
 
@@ -519,6 +519,9 @@ void main() {
         findsNothing,
       );
 
+      await tester.ensureVisible(find.byKey(HomeScreen.diaryContinueKey));
+      expectGridButton(tester, find.byKey(HomeScreen.diaryContinueKey));
+
       await tapAndSettle(tester, find.byKey(HomeScreen.diaryContinueKey));
       expect(currentPath(container), AppRoutes.diary);
     });
@@ -539,6 +542,9 @@ void main() {
         find.text(LockedOverlayText.graduateOnlyTitle, skipOffstage: false),
         findsOneWidget,
       );
+
+      await tester.ensureVisible(find.byKey(HomeScreen.diaryVerifyKey));
+      expectGridButton(tester, find.byKey(HomeScreen.diaryVerifyKey));
 
       await tapAndSettle(tester, find.byKey(HomeScreen.diaryVerifyKey));
       expect(currentPath(container), AppRoutes.verification);

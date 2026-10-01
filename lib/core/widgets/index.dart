@@ -9,3 +9,4 @@ export 'loading_indicator.dart';
 export 'locked_overlay.dart';
 export 'share_button.dart';
 export 'state_widgets.dart';
+export 'top_bar_icon_button.dart';

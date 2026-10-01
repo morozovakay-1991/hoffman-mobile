@@ -299,7 +299,7 @@ void main() {
 
       _expectTitle(tester, 'Границы');
       final subtitle = tester.widget<Text>(
-        find.text('сложности в отношениях / границы'),
+        find.text(bindShortWords('сложности в отношениях / границы')),
       );
       expect(subtitle.style?.fontSize, 12);
       expect(subtitle.style?.color, AppColors.basicBlack);
@@ -333,7 +333,9 @@ void main() {
         tester.getTopLeft(find.byKey(_coverKey)).dy,
         greaterThan(
           tester
-              .getBottomLeft(find.text('сложности в отношениях / границы'))
+              .getBottomLeft(
+                find.text(bindShortWords('сложности в отношениях / границы')),
+              )
               .dy,
         ),
       );
@@ -361,7 +363,7 @@ void main() {
         tester,
         card: ThemeListCard,
         top: find.text('Границы'),
-        bottom: find.text('сложности в отношениях / границы'),
+        bottom: find.text(bindShortWords('сложности в отношениях / границы')),
       );
 
       await pumpThemed(tester, card(isExpanded: true), width: _width);

@@ -45,12 +45,15 @@ void main() {
       WidgetTester tester, {
       required String actionLabel,
       double width = _screenWidth,
+      String? subtitle,
+      String description = 'Описание медитации',
     }) {
       return pumpThemed(
         tester,
         HomeFeaturedItem(
           title: 'Утренняя медитация',
-          description: 'Описание медитации',
+          subtitle: subtitle,
+          description: description,
           trailing: const HomeMetaLabel(
             icon: Icons.watch_later,
             text: '25 минут',
@@ -121,6 +124,38 @@ void main() {
         expect(button.height, HomeFeaturedItem.buttonHeight);
       });
     }
+    testWidgets('subtitle is 6 columns wide, as on the section cover', (
+      tester,
+    ) async {
+      await pump(tester, actionLabel: 'Читать', subtitle: 'Я и мои границы');
+      const content = _screenWidth - 2 * AppGrid.margin;
+
+      final subtitle = find.text('Я$nbspи$nbspмои границы');
+      expect(subtitle, findsOneWidget);
+      expect(HomeFeaturedItem.subtitleColumns, 6);
+      expect(
+        tester
+            .getSize(
+              find
+                  .ancestor(of: subtitle, matching: find.byType(SizedBox))
+                  .first,
+            )
+            .width,
+        closeTo(AppGrid.span(content, 6), 0.01),
+      );
+    });
+
+    testWidgets('description ties one-letter words to the next one', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        actionLabel: 'Читать',
+        description: 'Работа с гневом и обидой',
+      );
+
+      expect(find.text('Работа с$nbspгневом и$nbspобидой'), findsOneWidget);
+    });
   });
 
   group('HomeSectionCover', () {
@@ -193,34 +228,45 @@ void main() {
       });
     }
 
-    testWidgets('subtitle is 4 columns wide', (tester) async {
+    testWidgets('subtitle is 6 columns wide', (tester) async {
       await pump(tester, underStatusBar: false);
 
-      final subtitle = tester.getRect(find.text(HomeText.meditationsSubtitle));
-      expect(subtitle.left, AppGrid.margin);
+      const content = _screenWidth - 2 * AppGrid.margin;
+      final subtitle = find.text(bindShortWords(HomeText.meditationsSubtitle));
+      expect(HomeSectionCover.subtitleColumns, 6);
+      expect(tester.getRect(subtitle).left, AppGrid.margin);
       expect(
-        subtitle.width,
-        lessThanOrEqualTo(
-          AppGrid.span(
-                _screenWidth - 2 * AppGrid.margin,
-                HomeSectionCover.subtitleColumns,
-              ) +
-              0.01,
-        ),
+        tester.getSize(subtitle).width,
+        lessThanOrEqualTo(AppGrid.span(content, 6) + 0.01),
       );
       expect(
         tester
             .getSize(
               find
-                  .ancestor(
-                    of: find.text(HomeText.meditationsSubtitle),
-                    matching: find.byType(SizedBox),
-                  )
+                  .ancestor(of: subtitle, matching: find.byType(SizedBox))
                   .first,
             )
             .width,
-        closeTo(AppGrid.span(_screenWidth - 2 * AppGrid.margin, 4), 0.01),
+        closeTo(AppGrid.span(content, 6), 0.01),
       );
+    });
+
+    testWidgets('subtitle ties one-letter words to the next one', (
+      tester,
+    ) async {
+      await pump(tester, underStatusBar: false);
+
+      // "Практики для осознания, проживания и восстановления".
+      final text = tester
+          .widget<Text>(
+            find.descendant(
+              of: find.byType(HomeSectionCover),
+              matching: find.textContaining('восстановления'),
+            ),
+          )
+          .data!;
+      expect(text, contains('и$nbspвосстановления'));
+      expect(text, isNot(contains(' и ')));
     });
 
     testWidgets('in a feed: 350px tall, text 32px below its top', (

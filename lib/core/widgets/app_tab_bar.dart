@@ -36,9 +36,9 @@ class AppTabBar extends StatelessWidget {
   static const double backgroundOpacity = 0.5;
 
   // TODO(figma): the mockup has no selected state (every icon is black);
-  // unselected tabs are dimmed to softBlack until one is drawn.
+  // unselected tabs take the `Blue tint` token until one is drawn.
   static const Color selectedColor = AppColors.basicBlack;
-  static const Color unselectedColor = AppColors.softBlack;
+  static const Color unselectedColor = AppColors.blueTint;
 
   final List<AppTabBarItem> items;
 

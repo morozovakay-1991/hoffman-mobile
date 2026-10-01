@@ -168,4 +168,67 @@ void main() {
       await tester.tap(find.text('Войти'));
     });
   });
+
+  group('AppGridButton', () {
+    for (final (width, label) in [
+      (360.0, 'Начать'),
+      (360.0, 'Пройти верификацию и получить доступ'),
+      (361.0, 'Слушать'),
+      (300.0, 'Продолжить'),
+    ]) {
+      testWidgets('3 columns of $width px whatever the label: "$label"', (
+        tester,
+      ) async {
+        await pumpThemed(
+          tester,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AppGridButton(
+                label: label,
+                trailingIcon: Icons.arrow_forward_rounded,
+                onPressed: () {},
+              ),
+            ],
+          ),
+          width: width,
+        );
+
+        final size = tester.getSize(find.byType(AppButton));
+        expect(size.width, closeTo(AppGrid.span(width, 3), 0.01));
+        expect(size.height, AppGridButton.height);
+      });
+    }
+
+    testWidgets('Figma 1:957: 130px at 360px of content', (tester) async {
+      await pumpThemed(
+        tester,
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [AppGridButton(label: 'Начать', onPressed: () {})],
+        ),
+        width: 360,
+      );
+
+      expect(tester.getSize(find.byType(AppButton)).width, closeTo(130, 0.01));
+    });
+
+    testWidgets('columns override', (tester) async {
+      await pumpThemed(
+        tester,
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AppGridButton(label: 'Начать', columns: 4, onPressed: () {}),
+          ],
+        ),
+        width: 360,
+      );
+
+      expect(
+        tester.getSize(find.byType(AppButton)).width,
+        closeTo(AppGrid.span(360, 4), 0.01),
+      );
+    });
+  });
 }

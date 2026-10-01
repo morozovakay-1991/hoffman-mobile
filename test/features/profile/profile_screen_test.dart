@@ -34,6 +34,8 @@ void main() {
 
       expect(find.text('Выпускник Процесса Хоффмана?'), findsOneWidget);
       expect(find.byKey(ProfileScreen.graduateConfirmedKey), findsNothing);
+      // 3 grid columns, like every content action button.
+      expectGridButton(tester, find.byKey(ProfileScreen.startVerificationKey));
 
       await tapAndSettle(
         tester,
