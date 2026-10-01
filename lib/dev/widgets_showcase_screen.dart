@@ -133,16 +133,23 @@ class WidgetsShowcaseScreen extends StatelessWidget {
             actionLabel: 'Читать',
             onTap: () {},
           ),
-          ToolListCard(
-            title: 'С обложкой',
-            cover: const ColoredBox(color: AppColors.blueTint),
-            description: _description,
-            tag: 'выражение',
-            actionLabel: 'Читать',
-            onTap: () {},
-          ),
           const _Section('ThemeListCard — tap to toggle'),
           const _ThemeListCardDemo(),
+          const _Section('ContentCardList — dividers between cards only'),
+          ContentCardList(
+            top: 0,
+            bottom: 0,
+            children: [
+              for (final title in ['Первая', 'Вторая', 'Третья'])
+                ToolListCard(
+                  title: title,
+                  description: _description,
+                  tag: 'выражение',
+                  actionLabel: 'Читать',
+                  onTap: () {},
+                ),
+            ],
+          ),
           const _Section('ShareButton'),
           const Align(
             alignment: Alignment.centerLeft,

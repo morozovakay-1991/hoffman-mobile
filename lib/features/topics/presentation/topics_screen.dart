@@ -107,12 +107,15 @@ class _TopicsScreenState extends ConsumerState<TopicsScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: RefreshIndicator(
+        edgeOffset: padding.top,
         onRefresh: _refresh,
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
-            // The status bar stays on white, as on the home screen.
-            SliverToBoxAdapter(child: SizedBox(height: padding.top)),
+            // With data the section cover runs up under the status bar;
+            // the loading and error states stay below it.
+            if (!catalog.hasValue)
+              SliverToBoxAdapter(child: SizedBox(height: padding.top)),
             body,
           ],
         ),
@@ -141,6 +144,7 @@ class _Catalog extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         HomeSectionCover(
+          underStatusBar: true,
           image: HomeScreen.topicsCover,
           imageUrl: featured?.coverImageUrl,
           title: HomeText.topics,
@@ -164,25 +168,25 @@ class _Catalog extends StatelessWidget {
             color: TopicsScreen.featuredColor,
             onTap: () => open(featured),
           ),
-        for (final item in catalog.items)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-            child: ThemeListCard(
-              key: TopicsScreen.cardKey(item.id),
-              title: item.title,
-              subtitle: item.subtitle,
-              cover: HomeCoverImage(
-                url: item.coverImageUrl,
-                fallback: HomeScreen.topicsCover,
+        ContentCardList(
+          children: [
+            for (final item in catalog.items)
+              ThemeListCard(
+                key: TopicsScreen.cardKey(item.id),
+                title: item.title,
+                subtitle: item.subtitle,
+                cover: HomeCoverImage(
+                  url: item.coverImageUrl,
+                  fallback: HomeScreen.topicsCover,
+                ),
+                body: item.summary,
+                actionLabel: HomeText.read,
+                isExpanded: expandedId == item.id,
+                onTap: () => onToggle(item.id),
+                onActionTap: () => open(item),
               ),
-              body: item.summary,
-              actionLabel: HomeText.read,
-              isExpanded: expandedId == item.id,
-              onTap: () => onToggle(item.id),
-              onActionTap: () => open(item),
-            ),
-          ),
-        const SizedBox(height: AppSpacing.xl),
+          ],
+        ),
       ],
     );
   }

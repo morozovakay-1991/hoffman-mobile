@@ -47,9 +47,11 @@ void main() {
       ToolListCard,
       ThemeListCard,
     ]) {
-      // The plain variant of each; ToolListCard also has one with a cover.
+      // One of each (the ContentCardList demo has more ToolListCards).
       final card = find.byWidgetPredicate(
-        (w) => w.runtimeType == type && !(w is ToolListCard && w.cover != null),
+        (w) =>
+            w.runtimeType == type &&
+            (w is! ToolListCard || w.title == 'Выражение гнева'),
       );
       await tester.scrollUntilVisible(
         card,
@@ -58,22 +60,6 @@ void main() {
       );
       expect(card, findsOneWidget);
     }
-  });
-
-  testWidgets('showcase has a ToolListCard with a cover', (tester) async {
-    await tester.pumpWidget(
-      MaterialApp(theme: AppTheme.light, home: const WidgetsShowcaseScreen()),
-    );
-
-    final withCover = find.byWidgetPredicate(
-      (w) => w is ToolListCard && w.cover != null,
-    );
-    await tester.scrollUntilVisible(
-      withCover,
-      200,
-      scrollable: find.byType(Scrollable).first,
-    );
-    expect(withCover, findsOneWidget);
   });
 
   testWidgets('ThemeListCard demo toggles on tap', (tester) async {

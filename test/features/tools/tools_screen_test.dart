@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hoffman/core/router/index.dart';
 import 'package:hoffman/core/widgets/index.dart';
@@ -29,6 +28,8 @@ void main() {
         find.byType(HomeSectionCover),
       );
       expect(cover.title, HomeText.tools);
+      expect(cover.underStatusBar, isTrue);
+      expect(tester.getTopLeft(find.byType(HomeSectionCover)).dy, 0);
       expect(cover.subtitle, HomeText.toolsSubtitle);
 
       final featured = tester.widget<HomeFeaturedItem>(
@@ -47,8 +48,8 @@ void main() {
       expect(find.text('Распознавание паттернов'), findsOneWidget);
     });
 
-    testWidgets('a card: cover thumbnail, title, short description, stage '
-        'badge and the "Читать" link to the exercise', (tester) async {
+    testWidgets('a card: title, short description, stage badge and the '
+        '"Читать" link to the exercise, no cover', (tester) async {
       const coverUrl = 'https://api.example.com/storage/covers/12.jpg';
       final harness = ToolsHarness.subscribed({
         getTools: catalog(null, [
@@ -65,15 +66,14 @@ void main() {
       expect(card.description, 'Описание: Выражение гнева');
       expect(card.tag, 'выражение');
       expect(card.actionLabel, HomeText.read);
-      final thumbnail = card.cover! as HomeCoverImage;
-      expect(thumbnail.url, Uri.parse(coverUrl));
-      expect(thumbnail.fallback, HomeScreen.toolsCover);
-
-      final inCard = find.descendant(
-        of: find.byKey(ToolsScreen.cardKey(12)),
-        matching: find.byType(HomeCoverImage),
+      // The tool has a cover_image_url, but the card shows no cover.
+      expect(
+        find.descendant(
+          of: find.byKey(ToolsScreen.cardKey(12)),
+          matching: find.byType(HomeCoverImage),
+        ),
+        findsNothing,
       );
-      expect(tester.getSize(inCard), const Size.square(ToolListCard.coverSize));
       expect(
         find.descendant(
           of: find.byKey(ToolsScreen.cardKey(12)),

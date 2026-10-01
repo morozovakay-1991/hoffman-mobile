@@ -66,7 +66,15 @@ class AppButton extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text(label, style: labelStyle),
+        // A label too long for a fixed-width button ends in an ellipsis.
+        Flexible(
+          child: Text(
+            label,
+            style: labelStyle,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
         if (icon != null) ...[
           const SizedBox(width: AppSpacing.sm),
           Icon(icon, size: _iconSize, color: foreground),

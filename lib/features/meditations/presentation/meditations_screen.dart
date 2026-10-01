@@ -89,12 +89,15 @@ class MeditationsScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: RefreshIndicator(
+        edgeOffset: padding.top,
         onRefresh: () => _refresh(context, ref),
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
-            // The status bar stays on white, as on the home screen.
-            SliverToBoxAdapter(child: SizedBox(height: padding.top)),
+            // With data the section cover runs up under the status bar;
+            // the loading and error states stay below it.
+            if (!catalog.hasValue)
+              SliverToBoxAdapter(child: SizedBox(height: padding.top)),
             body,
           ],
         ),
@@ -102,12 +105,6 @@ class MeditationsScreen extends ConsumerWidget {
     );
   }
 }
-
-/// Padding around a card after the featured meditation (612:7256).
-const EdgeInsets _cardPadding = EdgeInsets.symmetric(
-  horizontal: AppSpacing.md,
-  vertical: AppSpacing.xl,
-);
 
 class _Catalog extends StatelessWidget {
   const _Catalog(this.catalog);
@@ -123,6 +120,7 @@ class _Catalog extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         HomeSectionCover(
+          underStatusBar: true,
           image: HomeScreen.meditationsCover,
           imageUrl: featured?.coverImageUrl,
           title: HomeText.meditations,
@@ -148,27 +146,24 @@ class _Catalog extends StatelessWidget {
             isLocked: featured.isLocked,
             onTap: () => open(featured),
           ),
-        for (final (i, item) in catalog.items.indexed) ...[
-          // No line above the first card when it heads the list.
-          if (featured != null || i > 0) const HomeDivider(),
-          Padding(
-            padding: _cardPadding,
-            child: MeditationCard(
-              key: MeditationsScreen.cardKey(item.id),
-              title: item.title,
-              cover: HomeCoverImage(
-                url: item.coverImageUrl,
-                fallback: HomeScreen.meditationsCover,
+        ContentCardList(
+          children: [
+            for (final item in catalog.items)
+              MeditationCard(
+                key: MeditationsScreen.cardKey(item.id),
+                title: item.title,
+                cover: HomeCoverImage(
+                  url: item.coverImageUrl,
+                  fallback: HomeScreen.meditationsCover,
+                ),
+                duration: HomeText.duration(item.durationSeconds),
+                description: item.shortDescription,
+                actionLabel: MeditationsText.start,
+                isLocked: item.isLocked,
+                onTap: () => open(item),
               ),
-              duration: HomeText.duration(item.durationSeconds),
-              description: item.shortDescription,
-              actionLabel: MeditationsText.start,
-              isLocked: item.isLocked,
-              onTap: () => open(item),
-            ),
-          ),
-        ],
-        const SizedBox(height: AppSpacing.xl),
+          ],
+        ),
       ],
     );
   }

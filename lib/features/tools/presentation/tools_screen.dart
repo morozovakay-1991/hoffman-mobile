@@ -15,7 +15,7 @@ import 'package:hoffman/features/tools/presentation/tools_text.dart';
 ///
 /// The section cover with the `темы` badge leading to the topics (the tab
 /// holds both), the featured tool on the blue panel, then a
-/// [ToolListCard] with a cover thumbnail per other tool.
+/// [ToolListCard] per other tool (no cover, as in the mockup).
 ///
 /// The tools are open to every user whatever the subscription (a product
 /// decision, departing from ТЗ 4.1): no card carries a lock.
@@ -86,12 +86,15 @@ class ToolsScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: RefreshIndicator(
+        edgeOffset: padding.top,
         onRefresh: () => _refresh(context, ref),
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
-            // The status bar stays on white, as on the home screen.
-            SliverToBoxAdapter(child: SizedBox(height: padding.top)),
+            // With data the section cover runs up under the status bar;
+            // the loading and error states stay below it.
+            if (!catalog.hasValue)
+              SliverToBoxAdapter(child: SizedBox(height: padding.top)),
             body,
           ],
         ),
@@ -114,6 +117,7 @@ class _Catalog extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         HomeSectionCover(
+          underStatusBar: true,
           image: HomeScreen.toolsCover,
           imageUrl: featured?.coverImageUrl,
           title: HomeText.tools,
@@ -144,23 +148,19 @@ class _Catalog extends StatelessWidget {
             actionVariant: AppButtonVariant.secondary,
             onTap: () => open(featured),
           ),
-        for (final item in catalog.items)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-            child: ToolListCard(
-              key: ToolsScreen.cardKey(item.id),
-              title: item.title,
-              cover: HomeCoverImage(
-                url: item.coverImageUrl,
-                fallback: HomeScreen.toolsCover,
+        ContentCardList(
+          children: [
+            for (final item in catalog.items)
+              ToolListCard(
+                key: ToolsScreen.cardKey(item.id),
+                title: item.title,
+                description: item.shortDescription,
+                tag: item.stageTag,
+                actionLabel: HomeText.read,
+                onTap: () => open(item),
               ),
-              description: item.shortDescription,
-              tag: item.stageTag,
-              actionLabel: HomeText.read,
-              onTap: () => open(item),
-            ),
-          ),
-        const SizedBox(height: AppSpacing.xl),
+          ],
+        ),
       ],
     );
   }

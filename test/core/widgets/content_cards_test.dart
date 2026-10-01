@@ -37,29 +37,23 @@ void _expectDescription(WidgetTester tester, String text) {
   expect(style?.color, AppColors.softBlack);
 }
 
-/// Checks the 0.5px basicBlack top divider and the spacing/md gaps: from
-/// the line to [top] and from [bottom] to the card's bottom edge.
-void _expectTopDivider(
+/// A list card draws no divider and no padding of its own (the
+/// [ContentCardList] holds both): [top] starts at the card's top edge and
+/// [bottom] ends at its bottom edge.
+void _expectFlush(
   WidgetTester tester, {
   required Type card,
   required Finder top,
   required Finder bottom,
 }) {
   final cardRect = tester.getRect(find.byType(card));
-  final dividerFinder = find.descendant(
-    of: find.byType(card),
-    matching: find.byType(Divider),
+  expect(
+    find.descendant(of: find.byType(card), matching: find.byType(Divider)),
+    findsNothing,
   );
-  expect(dividerFinder, findsOneWidget);
-  final divider = tester.widget<Divider>(dividerFinder);
-  expect(divider.thickness, 0.5);
-  expect(divider.color, AppColors.basicBlack);
-
-  final line = tester.getRect(dividerFinder);
-  expect(line.top, cardRect.top);
-  expect(line.width, cardRect.width);
-  expect(tester.getTopLeft(top).dy - line.bottom, AppSpacing.md);
-  expect(cardRect.bottom - tester.getBottomLeft(bottom).dy, AppSpacing.md);
+  expect(tester.getTopLeft(top).dy, cardRect.top);
+  expect(tester.getTopLeft(top).dx, cardRect.left);
+  expect(tester.getBottomLeft(bottom).dy, cardRect.bottom);
 }
 
 Future<void> _expectTapAnywhere(
@@ -162,10 +156,10 @@ void main() {
       expect(find.byIcon(Icons.play_arrow_rounded), findsNothing);
     });
 
-    testWidgets('top divider with spacing/md gaps', (tester) async {
+    testWidgets('no divider or padding of its own', (tester) async {
       await pumpThemed(tester, card(), width: _width);
 
-      _expectTopDivider(
+      _expectFlush(
         tester,
         card: ArticleListCard,
         top: find.text('Стресс, неудовлетворенность, одиночество'),
@@ -249,10 +243,10 @@ void main() {
       expect(find.byIcon(Icons.chevron_right_rounded), findsNothing);
     });
 
-    testWidgets('top divider with spacing/md gaps', (tester) async {
+    testWidgets('no divider or padding of its own', (tester) async {
       await pumpThemed(tester, card(), width: _width);
 
-      _expectTopDivider(
+      _expectFlush(
         tester,
         card: ToolListCard,
         top: find.text('Выражение гнева'),
@@ -266,34 +260,17 @@ void main() {
       expect(find.byType(Icon), findsOneWidget); // the action arrow
     });
 
-    testWidgets('a cover is a square thumbnail left of the description', (
+    testWidgets('no cover: the description starts at the left edge', (
       tester,
     ) async {
-      await pumpThemed(
-        tester,
-        const ToolListCard(
-          title: 'Выражение гнева',
-          cover: _cover,
-          description: 'Описание инструмента',
-          tag: 'выражение',
-          actionLabel: 'Читать',
-        ),
-        width: _width,
-      );
+      await pumpThemed(tester, card(), width: _width);
 
-      final thumbnail = find.byKey(_coverKey);
+      final cardRect = tester.getRect(find.byType(ToolListCard));
+      expect(find.byType(ClipRect), findsNothing);
+      expect(find.byType(Image), findsNothing);
       expect(
-        tester.getSize(thumbnail),
-        const Size.square(ToolListCard.coverSize),
-      );
-      expect(
-        tester.getTopRight(thumbnail).dx,
-        lessThan(tester.getTopLeft(find.text('Описание инструмента')).dx),
-      );
-      // The tag keeps its place on the right.
-      expect(
-        tester.getTopLeft(find.text('выражение')).dx,
-        greaterThan(tester.getTopRight(find.text('Описание инструмента')).dx),
+        tester.getTopLeft(find.text('Описание инструмента')).dx,
+        cardRect.left,
       );
     });
 
@@ -376,11 +353,11 @@ void main() {
       );
     });
 
-    testWidgets('top divider with spacing/md gaps in both states', (
+    testWidgets('no divider or padding of its own, in both states', (
       tester,
     ) async {
       await pumpThemed(tester, card(), width: _width);
-      _expectTopDivider(
+      _expectFlush(
         tester,
         card: ThemeListCard,
         top: find.text('Границы'),
@@ -388,7 +365,7 @@ void main() {
       );
 
       await pumpThemed(tester, card(isExpanded: true), width: _width);
-      _expectTopDivider(
+      _expectFlush(
         tester,
         card: ThemeListCard,
         top: find.text('Границы'),
@@ -488,5 +465,381 @@ void main() {
 
     await tester.tap(find.text('Границы'));
     expect((cardTaps, actionTaps), (1, 1));
+  });
+
+  group('ContentCardList', () {
+    /// Screen width in Figma: the list runs edge to edge.
+    const screenWidth = 393.0;
+    const cardHeight = 50.0;
+    Widget card(String key) => SizedBox(key: ValueKey(key), height: cardHeight);
+
+    testWidgets('dividers only between the cards, 16px on both sides', (
+      tester,
+    ) async {
+      await pumpThemed(
+        tester,
+        ContentCardList(children: [card('a'), card('b'), card('c')]),
+        width: screenWidth,
+      );
+
+      final list = tester.getRect(find.byType(ContentCardList));
+      final cards = [
+        for (final key in ['a', 'b', 'c'])
+          tester.getRect(find.byKey(ValueKey(key))),
+      ];
+      final dividers = find.byType(ContentDivider);
+      expect(dividers, findsNWidgets(2));
+      final lines = [
+        for (var i = 0; i < 2; i++) tester.getRect(dividers.at(i)),
+      ];
+
+      // spacing/xl above the first card and below the last, no line there.
+      expect(cards.first.top - list.top, AppSpacing.xl);
+      expect(list.bottom - cards.last.bottom, AppSpacing.xl);
+      for (var i = 0; i < lines.length; i++) {
+        expect(lines[i].top - cards[i].bottom, AppSpacing.md);
+        expect(cards[i + 1].top - lines[i].bottom, AppSpacing.md);
+        // Full width line, inset cards.
+        expect(lines[i].left, 0);
+        expect(lines[i].width, screenWidth);
+      }
+      for (final rect in cards) {
+        expect(rect.left, AppGrid.margin);
+        expect(rect.right, screenWidth - AppGrid.margin);
+      }
+
+      final divider = tester.widget<Divider>(find.byType(Divider).first);
+      expect(divider.thickness, ContentDivider.thickness);
+      expect(divider.color, AppColors.basicBlack);
+    });
+
+    testWidgets('a single card: no divider at all', (tester) async {
+      await pumpThemed(
+        tester,
+        ContentCardList(children: [card('a')]),
+        width: screenWidth,
+      );
+
+      expect(find.byType(ContentDivider), findsNothing);
+      expect(
+        tester.getSize(find.byType(ContentCardList)).height,
+        AppSpacing.xl + cardHeight + AppSpacing.xl,
+      );
+    });
+
+    testWidgets('top and bottom are configurable', (tester) async {
+      await pumpThemed(
+        tester,
+        ContentCardList(top: AppSpacing.lg, bottom: 0, children: [card('a')]),
+        width: screenWidth,
+      );
+
+      final list = tester.getRect(find.byType(ContentCardList));
+      final rect = tester.getRect(find.byKey(const ValueKey('a')));
+      expect(rect.top - list.top, AppSpacing.lg);
+      expect(rect.bottom, list.bottom);
+    });
+
+    testWidgets('no cards: takes no space', (tester) async {
+      await pumpThemed(
+        tester,
+        const ContentCardList(children: []),
+        width: screenWidth,
+      );
+
+      expect(tester.getSize(find.byType(ContentCardList)).height, 0);
+    });
+  });
+
+  group(
+    'ContentCardList with real cards: 16px from the line to the content',
+    () {
+      /// Screen width in Figma: the list runs edge to edge.
+      const screenWidth = 393.0;
+
+      /// Two cards titled `Первая` / `Вторая` and the finders of the elements
+      /// that can end a card (the lowest one is its visual bottom). The
+      /// action link is its label and the 16px arrow, the taller of the two.
+      final link = find.byIcon(Icons.arrow_forward_rounded);
+      final cases = <String, (Widget Function(String title), List<Finder>)>{
+        'MeditationCard': (
+          (title) => MeditationCard(
+            title: title,
+            cover: const ColoredBox(color: AppColors.blueTint),
+            duration: '25 минут',
+            description: 'Описание',
+            actionLabel: 'Начать',
+          ),
+          [find.text('Начать'), link, find.byType(ColoredBox)],
+        ),
+        'ArticleListCard': (
+          (title) => ArticleListCard(
+            title: title,
+            cover: const ColoredBox(color: AppColors.blueTint),
+            date: 'Март, 2025',
+            description: 'Описание',
+            actionLabel: 'Читать',
+          ),
+          [find.text('Читать'), link, find.byType(ColoredBox)],
+        ),
+        'ToolListCard': (
+          (title) => ToolListCard(
+            title: title,
+            description: 'Описание',
+            tag: 'выражение',
+            actionLabel: 'Читать',
+          ),
+          [find.text('Читать'), link],
+        ),
+        'ThemeListCard folded': (
+          (title) => ThemeListCard(
+            title: title,
+            subtitle: 'Подзаголовок',
+            cover: const ColoredBox(color: AppColors.blueTint),
+            body: 'Текст',
+            actionLabel: 'Читать',
+          ),
+          [find.text('Подзаголовок')],
+        ),
+        'ThemeListCard expanded': (
+          (title) => ThemeListCard(
+            title: title,
+            subtitle: 'Подзаголовок',
+            cover: const ColoredBox(color: AppColors.blueTint),
+            body: 'Текст',
+            actionLabel: 'Читать',
+            isExpanded: true,
+          ),
+          [find.text('Читать'), link, find.byType(ColoredBox)],
+        ),
+      };
+
+      for (final MapEntry(key: name, value: (build, enders)) in cases.entries) {
+        testWidgets('$name: last element → line = line → next title = 16px', (
+          tester,
+        ) async {
+          await pumpThemed(
+            tester,
+            ContentCardList(children: [build('Первая'), build('Вторая')]),
+            width: screenWidth,
+          );
+
+          final first = find.byType(ContentCardList).first;
+          final firstCard = find
+              .descendant(
+                of: first,
+                matching: find.byWidgetPredicate(
+                  (w) => w.runtimeType == build('').runtimeType,
+                ),
+              )
+              .first;
+          final contentBottom = [
+            for (final finder in enders)
+              for (final element
+                  in find
+                      .descendant(of: firstCard, matching: finder)
+                      .evaluate())
+                tester
+                    .getRect(find.byElementPredicate((e) => e == element))
+                    .bottom,
+          ].reduce((a, b) => a > b ? a : b);
+          final line = tester.getRect(find.byType(ContentDivider));
+          final nextTitleTop = tester.getTopLeft(find.text('Вторая')).dy;
+
+          final below = line.top - contentBottom;
+          final above = nextTitleTop - line.bottom;
+          final gaps = 'content → line $below, line → title $above';
+          expect(below, AppSpacing.md, reason: gaps);
+          expect(above, AppSpacing.md, reason: gaps);
+        });
+      }
+    },
+  );
+
+  group('card layout: 24px title → content, 16px inside the content', () {
+    const short = 'Коротко';
+    final long = List.filled(12, 'Длинное описание карточки.').join(' ');
+
+    /// The row that holds [text] (the meta row or the action link).
+    Rect rowOf(WidgetTester tester, String text) => tester.getRect(
+      find.ancestor(of: find.text(text), matching: find.byType(Row)).first,
+    );
+    double titleBottom(WidgetTester tester, String title) =>
+        tester.getBottomLeft(find.text(title)).dy;
+    Rect coverOf(WidgetTester tester) => tester.getRect(find.byKey(_coverKey));
+    Rect cardOf(WidgetTester tester, Type type) =>
+        tester.getRect(find.byType(type));
+
+    /// [rects] top to bottom, each [_contentGap] below the previous one.
+    void expectContentGaps(List<Rect> rects) {
+      for (var i = 1; i < rects.length; i++) {
+        expect(rects[i].top - rects[i - 1].bottom, AppSpacing.md);
+      }
+    }
+
+    group('MeditationCard', () {
+      Widget build(String description) => MeditationCard(
+        title: 'Медитация',
+        cover: _cover,
+        duration: '25 минут',
+        description: description,
+        actionLabel: 'Начать',
+      );
+
+      testWidgets('24px title → content, 16px between the duration, the '
+          'description and the link, text top = cover top', (tester) async {
+        await pumpThemed(tester, build(short), width: _width);
+
+        final meta = rowOf(tester, '25 минут');
+        final link = rowOf(tester, 'Начать');
+        final description = tester.getRect(find.text(short));
+        expect(meta.top - titleBottom(tester, 'Медитация'), AppSpacing.lg);
+        expect(
+          coverOf(tester).top - titleBottom(tester, 'Медитация'),
+          AppSpacing.lg,
+        );
+        expectContentGaps([meta, description, link]);
+        expect(meta.top, coverOf(tester).top);
+      });
+
+      testWidgets('bottom: the cover under a short text, the link under a '
+          'long one', (tester) async {
+        await pumpThemed(tester, build(short), width: _width);
+        expect(
+          rowOf(tester, 'Начать').bottom,
+          lessThan(coverOf(tester).bottom),
+        );
+        expect(cardOf(tester, MeditationCard).bottom, coverOf(tester).bottom);
+
+        await pumpThemed(tester, build(long), width: _width);
+        expect(
+          rowOf(tester, 'Начать').bottom,
+          greaterThan(coverOf(tester).bottom),
+        );
+        expect(
+          cardOf(tester, MeditationCard).bottom,
+          rowOf(tester, 'Начать').bottom,
+        );
+      });
+    });
+
+    group('ArticleListCard', () {
+      Widget build(String description) => ArticleListCard(
+        title: 'Статья',
+        cover: _cover,
+        date: 'Март, 2025',
+        description: description,
+        actionLabel: 'Читать',
+      );
+
+      testWidgets('24px title → content, 16px between the date, the '
+          'description and the link, text top = cover top', (tester) async {
+        await pumpThemed(tester, build(short), width: _width);
+
+        final meta = rowOf(tester, 'Март, 2025');
+        final link = rowOf(tester, 'Читать');
+        final description = tester.getRect(find.text(short));
+        expect(meta.top - titleBottom(tester, 'Статья'), AppSpacing.lg);
+        expect(
+          coverOf(tester).top - titleBottom(tester, 'Статья'),
+          AppSpacing.lg,
+        );
+        expectContentGaps([meta, description, link]);
+        expect(meta.top, coverOf(tester).top);
+      });
+
+      testWidgets('bottom: the cover under a short text, the link under a '
+          'long one', (tester) async {
+        await pumpThemed(tester, build(short), width: _width);
+        expect(
+          rowOf(tester, 'Читать').bottom,
+          lessThan(coverOf(tester).bottom),
+        );
+        expect(cardOf(tester, ArticleListCard).bottom, coverOf(tester).bottom);
+
+        await pumpThemed(tester, build(long), width: _width);
+        expect(
+          rowOf(tester, 'Читать').bottom,
+          greaterThan(coverOf(tester).bottom),
+        );
+        expect(
+          cardOf(tester, ArticleListCard).bottom,
+          rowOf(tester, 'Читать').bottom,
+        );
+      });
+    });
+
+    group('ToolListCard', () {
+      Widget build(String description) => ToolListCard(
+        title: 'Инструмент',
+        description: description,
+        tag: 'выражение',
+        actionLabel: 'Читать',
+      );
+
+      for (final (name, text) in [('short', short), ('long', long)]) {
+        testWidgets('$name text: 24px title → content, 16px description '
+            'row → link, the link is the bottom', (tester) async {
+          await pumpThemed(tester, build(text), width: _width);
+
+          final description = tester.getRect(find.text(text));
+          final badge = tester.getRect(find.byType(AppBadge));
+          final link = rowOf(tester, 'Читать');
+          expect(
+            description.top - titleBottom(tester, 'Инструмент'),
+            AppSpacing.lg,
+          );
+          // The badge sits on the description's first line.
+          expect(badge.top, description.top);
+          // The description row ends with the lower of the text and the
+          // badge (a one-line text is shorter than the badge).
+          final row = description.expandToInclude(badge);
+          expectContentGaps([row, link]);
+          expect(cardOf(tester, ToolListCard).bottom, link.bottom);
+        });
+      }
+
+      testWidgets('no cover', (tester) async {
+        await pumpThemed(tester, build(short), width: _width);
+
+        expect(find.byType(ClipRect), findsNothing);
+        expect(find.byType(Image), findsNothing);
+      });
+    });
+
+    group('ThemeListCard expanded', () {
+      Widget build(String body) => ThemeListCard(
+        title: 'Тема',
+        subtitle: 'Подзаголовок',
+        cover: _cover,
+        body: body,
+        actionLabel: 'Читать',
+        isExpanded: true,
+      );
+
+      testWidgets('24px header → content, 16px body → link, text top = '
+          'cover top', (tester) async {
+        await pumpThemed(tester, build(short), width: _width);
+
+        final header = tester.getBottomLeft(find.text('Подзаголовок')).dy;
+        final body = tester.getRect(find.text(short));
+        expect(body.top - header, AppSpacing.lg);
+        expect(coverOf(tester).top - header, AppSpacing.lg);
+        expectContentGaps([body, rowOf(tester, 'Читать')]);
+        expect(body.top, coverOf(tester).top);
+      });
+
+      testWidgets('bottom: the cover under a short text, the link under a '
+          'long one', (tester) async {
+        await pumpThemed(tester, build(short), width: _width);
+        expect(cardOf(tester, ThemeListCard).bottom, coverOf(tester).bottom);
+
+        await pumpThemed(tester, build(long), width: _width);
+        expect(
+          cardOf(tester, ThemeListCard).bottom,
+          rowOf(tester, 'Читать').bottom,
+        );
+      });
+    });
   });
 }

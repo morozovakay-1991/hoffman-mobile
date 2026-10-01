@@ -39,6 +39,8 @@ class HomeCoverImage extends StatelessWidget {
 /// item; the `все` badge keeps leading to the list. The section's own list
 /// screen heads with it too, without the badge ([onSeeAll] `null`) or with
 /// a badge to a sibling section ([seeAllLabel], e.g. `темы` on the tools).
+/// Heading a list screen, it also runs up under the status bar
+/// ([underStatusBar]), like the cover of a detail screen.
 class HomeSectionCover extends StatelessWidget {
   const HomeSectionCover({
     required this.image,
@@ -54,12 +56,23 @@ class HomeSectionCover extends StatelessWidget {
     this.seeAllLabel = HomeText.seeAll,
     this.foreground = AppColors.background,
     this.shaded = false,
+    this.underStatusBar = false,
   });
 
+  /// Height below the status bar.
   static const double height = 350;
+
+  /// Width of the subtitle in [AppGrid] columns.
+  static const int subtitleColumns = 4;
 
   /// Figma `Text/Display` has -4% tracking on the covers.
   static const double _titleTracking = -1.28;
+
+  /// Height of one line of the title (`headlineLarge`).
+  static double _titleLineHeight(TextTheme textTheme) {
+    final style = textTheme.headlineLarge!;
+    return style.fontSize! * (style.height ?? 1);
+  }
 
   /// Subtitle `Secondary` style: 14px Medium on a 20px line.
   static const double _subtitleLineHeight = 20 / 14;
@@ -94,13 +107,18 @@ class HomeSectionCover extends StatelessWidget {
   /// Adds the top gradient that keeps white text readable on a light image.
   final bool shaded;
 
+  /// Extends the image to the top of the screen, under the status bar, and
+  /// moves the text below it. For a cover at the very top of a screen.
+  final bool underStatusBar;
+
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final onTap = this.onTap;
+    final topInset = underStatusBar ? MediaQuery.paddingOf(context).top : 0.0;
 
     final cover = SizedBox(
-      height: height,
+      height: topInset + height,
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -125,10 +143,10 @@ class HomeSectionCover extends StatelessWidget {
               ),
             ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.md,
-              AppSpacing.xl,
-              AppSpacing.md,
+            padding: EdgeInsets.fromLTRB(
+              AppGrid.margin,
+              topInset + AppSpacing.xl,
+              AppGrid.margin,
               0,
             ),
             child: Column(
@@ -151,27 +169,39 @@ class HomeSectionCover extends StatelessWidget {
                     ),
                     if (onSeeAll case final onSeeAll?) ...[
                       const SizedBox(width: AppSpacing.md),
-                      Semantics(
-                        button: true,
-                        label:
-                            '$seeAllLabel: '
-                            '${title.replaceAll('\n', ' ')}',
-                        excludeSemantics: true,
-                        child: AppBadge(
-                          key: seeAllKey,
-                          label: seeAllLabel,
-                          onTap: onSeeAll,
+                      // Centered on the title's first line (the diary title
+                      // has two).
+                      SizedBox(
+                        height: _titleLineHeight(textTheme),
+                        child: Center(
+                          child: Semantics(
+                            button: true,
+                            label:
+                                '$seeAllLabel: '
+                                '${title.replaceAll('\n', ' ')}',
+                            excludeSemantics: true,
+                            child: AppBadge(
+                              key: seeAllKey,
+                              label: seeAllLabel,
+                              onTap: onSeeAll,
+                            ),
+                          ),
                         ),
                       ),
                     ],
                   ],
                 ),
                 const SizedBox(height: AppSpacing.md),
-                Text(
-                  subtitle,
-                  style: textTheme.labelLarge?.copyWith(
-                    color: foreground,
-                    height: _subtitleLineHeight,
+                LayoutBuilder(
+                  builder: (context, constraints) => SizedBox(
+                    width: AppGrid.span(constraints.maxWidth, subtitleColumns),
+                    child: Text(
+                      subtitle,
+                      style: textTheme.labelLarge?.copyWith(
+                        color: foreground,
+                        height: _subtitleLineHeight,
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -196,7 +226,15 @@ class HomeSectionCover extends StatelessWidget {
 /// The featured item of a section, e.g. `Утренняя медитация`
 /// (612:7228) or `Распознавание паттернов` (612:7751): a tinted panel with
 /// the title, the description next to a [trailing] detail (duration, date,
-/// stage badge) and a 130px action button.
+/// stage badge) and the action button.
+///
+/// The bottom block follows the 8-column [AppGrid] (Figma 1:957): the
+/// description runs up to the start of column [descriptionColumns] + 1
+/// (230px of 360), the [trailing] detail hugs its content at the right
+/// edge, and the button below is always [buttonColumns] wide (130px of 360)
+/// whatever its label.
+// The diary's featured card (not built yet) is the one exception: its
+// description takes 7 columns.
 class HomeFeaturedItem extends StatelessWidget {
   const HomeFeaturedItem({
     required this.title,
@@ -213,6 +251,8 @@ class HomeFeaturedItem extends StatelessWidget {
   });
 
   static const double buttonHeight = 28;
+  static const int descriptionColumns = 5;
+  static const int buttonColumns = 3;
   static const int _descriptionMaxLines = 7;
 
   final String title;
@@ -259,35 +299,46 @@ class HomeFeaturedItem extends StatelessWidget {
                 Text(subtitle, style: textTheme.bodySmall),
               ],
               const SizedBox(height: AppSpacing.lg),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Text(
-                      description,
-                      maxLines: _descriptionMaxLines,
-                      overflow: TextOverflow.ellipsis,
-                      style: textTheme.bodySmall?.copyWith(
-                        color: AppColors.softBlack,
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final width = constraints.maxWidth;
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(
+                            width: AppGrid.boundary(width, descriptionColumns),
+                            child: Text(
+                              description,
+                              maxLines: _descriptionMaxLines,
+                              overflow: TextOverflow.ellipsis,
+                              style: textTheme.bodySmall?.copyWith(
+                                color: AppColors.softBlack,
+                              ),
+                            ),
+                          ),
+                          ?trailing,
+                        ],
                       ),
-                    ),
-                  ),
-                  if (trailing != null) ...[
-                    const SizedBox(width: AppSpacing.md),
-                    trailing,
-                  ],
-                ],
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              SizedBox(
-                width: AppButton.minWidth,
-                height: buttonHeight,
-                child: AppButton(
-                  label: actionLabel,
-                  variant: actionVariant,
-                  trailingIcon: actionIcon,
-                  onPressed: onTap,
-                ),
+                      const SizedBox(height: AppSpacing.lg),
+                      // Fixed width whatever the label, no hugging.
+                      SizedBox(
+                        width: AppGrid.span(width, buttonColumns),
+                        height: buttonHeight,
+                        child: AppButton(
+                          label: actionLabel,
+                          variant: actionVariant,
+                          trailingIcon: actionIcon,
+                          onPressed: onTap,
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
             ],
           ),
@@ -316,22 +367,6 @@ class HomeMetaLabel extends StatelessWidget {
         const SizedBox(width: AppSpacing.xs),
         Text(text, style: Theme.of(context).textTheme.labelMedium),
       ],
-    );
-  }
-}
-
-/// Full-width 0.5px divider between the cards of a section (`Line 9`).
-class HomeDivider extends StatelessWidget {
-  const HomeDivider({super.key});
-
-  static const double thickness = 0.5;
-
-  @override
-  Widget build(BuildContext context) {
-    return const Divider(
-      height: thickness,
-      thickness: thickness,
-      color: AppColors.basicBlack,
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hoffman/core/router/index.dart';
+import 'package:hoffman/core/theme/index.dart';
 import 'package:hoffman/core/widgets/index.dart';
 import 'package:hoffman/features/articles/index.dart';
 import 'package:hoffman/features/auth/index.dart';
@@ -22,6 +23,30 @@ Future<void> _tapButtonIn(WidgetTester tester, Finder of, String label) =>
 
 void main() {
   group('612:7209 — Главная', () {
+    testWidgets('32px from the featured item to the list and from the list '
+        'to the next cover, no divider around a single card', (tester) async {
+      await pumpApp(tester, homeEnv());
+
+      final featured = tester.getRect(
+        find.byType(HomeFeaturedItem, skipOffstage: false).first,
+      );
+      final card = tester.getRect(
+        find.byType(MeditationCard, skipOffstage: false),
+      );
+      final toolsCover = tester.getRect(
+        find.byType(HomeSectionCover, skipOffstage: false).at(1),
+      );
+      expect(card.top - featured.bottom, AppSpacing.xl);
+      expect(toolsCover.top - card.bottom, AppSpacing.xl);
+      expect(
+        find.descendant(
+          of: find.byType(ContentCardList, skipOffstage: false).first,
+          matching: find.byType(ContentDivider, skipOffstage: false),
+        ),
+        findsNothing,
+      );
+    });
+
     testWidgets('greets the user by name and builds every section from a '
         'single GET /home', (tester) async {
       final env = homeEnv();
