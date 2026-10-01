@@ -391,44 +391,43 @@ void main() {
     });
   });
 
-  group('locked content', () {
-    final cards = <String, Widget Function({required bool isLocked})>{
-      'MeditationCard': ({required isLocked}) => MeditationCard(
+  testWidgets('no card ever shows a lock', (tester) async {
+    // Locked content keeps the plain card; the lock lives on the content
+    // screen (MeditationLockedView), the diary is the only other place.
+    for (final card in const <Widget>[
+      MeditationCard(
         title: 'Утренняя медитация',
         cover: _cover,
         duration: '25 минут',
         description: 'Описание',
         actionLabel: 'Начать',
-        isLocked: isLocked,
       ),
-      'ArticleListCard': ({required isLocked}) => ArticleListCard(
+      ArticleListCard(
         title: 'Утренняя медитация',
         cover: _cover,
         date: 'Март, 2025',
         description: 'Описание',
         actionLabel: 'Читать',
-        isLocked: isLocked,
+        badge: 'новое',
       ),
-    };
-
-    for (final MapEntry(key: name, value: build) in cards.entries) {
-      testWidgets('$name: a lock after the title only when locked', (
-        tester,
-      ) async {
-        await pumpThemed(tester, build(isLocked: false), width: _width);
-        expect(find.byType(LockedMark), findsNothing);
-
-        await pumpThemed(tester, build(isLocked: true), width: _width);
-        expect(find.byType(LockedMark), findsOneWidget);
-        expect(
-          tester.getCenter(find.byType(LockedMark)).dx,
-          greaterThan(tester.getCenter(find.text('Утренняя медитация')).dx),
-        );
-        expect(
-          tester.widget<Icon>(find.byIcon(Icons.lock)).semanticLabel,
-          LockedMark.semanticLabel,
-        );
-      });
+      ToolListCard(
+        title: 'Инструмент',
+        description: 'Описание',
+        tag: 'Этап 1',
+        actionLabel: 'Начать',
+      ),
+      ThemeListCard(
+        title: 'Тема',
+        subtitle: 'Подзаголовок',
+        cover: _cover,
+        body: 'Текст',
+        actionLabel: 'Читать',
+        isExpanded: true,
+      ),
+    ]) {
+      await pumpThemed(tester, card, width: _width);
+      expect(find.byType(LockedMark), findsNothing);
+      expect(find.byIcon(Icons.lock), findsNothing);
     }
   });
 

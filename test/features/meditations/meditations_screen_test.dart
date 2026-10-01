@@ -47,7 +47,9 @@ void main() {
         'Закрытая практика',
       ]);
       expect(cards.map((c) => c.duration), ['25 минут', '25 минут']);
-      expect(cards.map((c) => c.isLocked), [false, true]);
+      // The locked one looks like the others: no lock on the list.
+      expect(find.byType(LockedMark, skipOffstage: false), findsNothing);
+      expect(find.byIcon(Icons.lock, skipOffstage: false), findsNothing);
       // featured is never repeated among the cards.
       expect(find.text('Утренняя медитация'), findsOneWidget);
     });

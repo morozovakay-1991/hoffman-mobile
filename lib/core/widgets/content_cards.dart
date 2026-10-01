@@ -28,7 +28,8 @@ const double _contentGap = AppSpacing.md;
 ///
 /// Title on top; below it the square [cover] with a play icon (left) and the
 /// details column (right): duration, description and the action link. The
-/// whole card handles [onTap]. [isLocked] adds a [LockedMark] to the title.
+/// whole card handles [onTap]. No lock mark even for a locked meditation:
+/// the meditation screen itself shows `MeditationLockedView`.
 class MeditationCard extends StatelessWidget {
   const MeditationCard({
     required this.title,
@@ -37,7 +38,6 @@ class MeditationCard extends StatelessWidget {
     required this.description,
     required this.actionLabel,
     super.key,
-    this.isLocked = false,
     this.onTap,
   });
 
@@ -54,7 +54,6 @@ class MeditationCard extends StatelessWidget {
   final String duration;
   final String description;
   final String actionLabel;
-  final bool isLocked;
   final VoidCallback? onTap;
 
   @override
@@ -65,7 +64,7 @@ class MeditationCard extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _CardTitle(title, isLocked: isLocked),
+          _CardTitle(title),
           const SizedBox(height: _titleGap),
           _CoverRow(
             cover: Stack(
@@ -97,8 +96,9 @@ class MeditationCard extends StatelessWidget {
 ///
 /// Title; below it the details column (date,
 /// description, action link) on the left and the [cover] on the right. The
-/// whole card handles [onTap]. [isLocked] adds a [LockedMark] to the title;
-/// [badge] adds an [AppBadge] ([AppBadgeVariant.tinted]) after the date.
+/// whole card handles [onTap]. [badge] adds an [AppBadge]
+/// ([AppBadgeVariant.tinted]) after the date. No lock mark: articles are
+/// open to everyone.
 class ArticleListCard extends StatelessWidget {
   const ArticleListCard({
     required this.title,
@@ -108,7 +108,6 @@ class ArticleListCard extends StatelessWidget {
     required this.actionLabel,
     super.key,
     this.badge,
-    this.isLocked = false,
     this.onTap,
   });
 
@@ -127,7 +126,6 @@ class ArticleListCard extends StatelessWidget {
 
   /// E.g. `новое` for an article marked new in the admin; `null` hides it.
   final String? badge;
-  final bool isLocked;
   final VoidCallback? onTap;
 
   @override
@@ -140,7 +138,7 @@ class ArticleListCard extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _CardTitle(title, isLocked: isLocked),
+          _CardTitle(title),
           const SizedBox(height: _titleGap),
           _CoverRow(
             coverOnLeft: false,
@@ -418,36 +416,20 @@ class _Tappable extends StatelessWidget {
 }
 
 class _CardTitle extends StatelessWidget {
-  const _CardTitle(this.text, {this.isLocked = false});
+  const _CardTitle(this.text);
 
   final String text;
-  final bool isLocked;
 
   @override
   Widget build(BuildContext context) {
-    final title = Text(text, style: Theme.of(context).textTheme.titleLarge);
-    if (!isLocked) return title;
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Flexible(child: title),
-        const SizedBox(width: AppSpacing.sm),
-        const Padding(
-          // Centers the mark on the first line (20px × 1.15).
-          padding: EdgeInsets.only(top: (23 - LockedMark.size) / 2),
-          child: LockedMark(),
-        ),
-      ],
-    );
+    return Text(text, style: Theme.of(context).textTheme.titleLarge);
   }
 }
 
-/// Lock icon marking content the user's access level does not open — shown
-/// next to a card title. The card stays tappable: the content screen itself
-/// shows `LockedOverlay` with the way to get access.
-// TODO(figma): no locked card in the mockups; the icon matches the one in
-// LockedOverlay.
+/// Lock icon of the diary: the only closed-state mark of the app (locked
+/// days, the locked diary block of the home screen). Content cards never
+/// carry it — a locked meditation shows its lock on its own screen.
+// TODO(figma): the icon matches the one in LockedOverlay.
 class LockedMark extends StatelessWidget {
   const LockedMark({super.key, this.color = AppColors.basicBlack});
 

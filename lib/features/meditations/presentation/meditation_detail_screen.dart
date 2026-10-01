@@ -16,8 +16,8 @@ import 'package:hoffman/features/profile/index.dart';
 /// duration, short and full description, the share icon and the button to
 /// the player.
 ///
-/// A 403 `ACCESS_DENIED` shows [MeditationLockedView] instead — the
-/// content and the player are never offered.
+/// A 403 `ACCESS_DENIED` shows the full-screen [MeditationLockedView]
+/// instead — the content and the player are never offered.
 // TODO(figma): no meditation mockup yet.
 class MeditationDetailScreen extends ConsumerWidget {
   const MeditationDetailScreen({required this.id, super.key});
@@ -42,14 +42,15 @@ class MeditationDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final id = this.id;
     final meditation = id == null ? null : ref.watch(meditationProvider(id));
+    if (meditation?.error case final error? when isAccessDenied(error)) {
+      return MeditationLockedView(onBack: () => _back(context));
+    }
 
     final body = switch (meditation) {
       null => const _Centered(
         child: EmptyStateWidget(message: MeditationsText.notFound),
       ),
       AsyncValue(:final value?) => _Content(value),
-      AsyncValue(:final error?) when isAccessDenied(error) =>
-        const MeditationLockedView(),
       AsyncValue(:final error?) when isNotFound(error) => const _Centered(
         child: EmptyStateWidget(message: MeditationsText.notFound),
       ),

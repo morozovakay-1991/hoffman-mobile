@@ -15,8 +15,8 @@ import 'package:hoffman/features/meditations/presentation/meditations_text.dart'
 /// Laid out like the meditations section of the home screen: the section
 /// cover with the featured meditation's image, the featured meditation
 /// highlighted under it ([HomeFeaturedItem]), then a [MeditationCard] per
-/// other meditation. Locked meditations carry a [LockedMark] and still open
-/// their detail screen, which explains the lock.
+/// other meditation. Locked meditations look like the others (no lock
+/// mark) and open their detail screen, which shows `MeditationLockedView`.
 // TODO(figma): no separate list mockup; follows the home section 612:7219.
 class MeditationsScreen extends ConsumerWidget {
   const MeditationsScreen({super.key});
@@ -143,7 +143,6 @@ class _Catalog extends StatelessWidget {
             ),
             actionLabel: MeditationsText.start,
             actionIcon: Icons.play_arrow_rounded,
-            isLocked: featured.isLocked,
             onTap: () => open(featured),
           ),
         ContentCardList(
@@ -159,7 +158,6 @@ class _Catalog extends StatelessWidget {
                 duration: HomeText.duration(item.durationSeconds),
                 description: item.shortDescription,
                 actionLabel: MeditationsText.start,
-                isLocked: item.isLocked,
                 onTap: () => open(item),
               ),
           ],

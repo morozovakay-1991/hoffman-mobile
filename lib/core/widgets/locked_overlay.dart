@@ -35,6 +35,11 @@ abstract final class LockedOverlayText {
   static const String lockedDayTitle =
       'Этот день заблокирован. Попробуйте завтра';
 
+  /// A section for Hoffman Process graduates only, full screen (Figma
+  /// 139:5278 `Closed section/content`), e.g. a locked meditation.
+  static const String graduatesOnlySectionTitle =
+      'Этот раздел доступен только для выпускников Процесса Хоффмана';
+
   /// Every preset string, for the wording check.
   static const List<String> all = [
     restrictedTitle,
@@ -46,6 +51,7 @@ abstract final class LockedOverlayText {
     graduateOnlyTitle,
     verify,
     lockedDayTitle,
+    graduatesOnlySectionTitle,
   ];
 }
 
@@ -65,6 +71,7 @@ class LockedOverlay extends StatelessWidget {
     required this.title,
     super.key,
     this.description,
+    this.alignment = Alignment.center,
     this.primaryAction,
     this.secondaryAction,
     this.child,
@@ -146,6 +153,10 @@ class LockedOverlay extends StatelessWidget {
 
   final String title;
   final String? description;
+
+  /// Where the block (title, description, lock, buttons) sits in the
+  /// overlay; centered by default.
+  final AlignmentGeometry alignment;
   final LockedOverlayAction? primaryAction;
   final LockedOverlayAction? secondaryAction;
 
@@ -175,7 +186,8 @@ class LockedOverlay extends StatelessWidget {
     final description = this.description;
     final actions = [?primaryAction, ?secondaryAction];
 
-    return Center(
+    return Align(
+      alignment: alignment,
       child: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
         child: Column(

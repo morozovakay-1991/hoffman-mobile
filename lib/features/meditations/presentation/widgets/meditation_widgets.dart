@@ -14,48 +14,45 @@ bool isNotFound(Object? error) =>
     error is ApiException && error.failure is NotFoundFailure;
 
 /// A meditation the user's access level does not open (403
-/// `ACCESS_DENIED`), in place of its content or player. Built like the
-/// locked diary block of the home screen: status-only wording, no mention
-/// of purchases — subscriptions are managed on the website only.
-// TODO(figma): no locked meditation screen in the mockups.
+/// `ACCESS_DENIED`), full screen in place of its content or player —
+/// Figma 139:5278 (`Closed section/content`): the [FlowerBackground], the
+/// back chevron of [MeditationTopBar] on top, and in the center
+/// [LockedOverlayText.graduatesOnlySectionTitle] with the 20px lock under it
+/// ([LockedOverlay]). No buttons.
 class MeditationLockedView extends StatelessWidget {
-  const MeditationLockedView({super.key});
+  const MeditationLockedView({required this.onBack, super.key});
 
   static const Key viewKey = ValueKey('meditation-locked');
 
+  /// Figma puts its two-line 112px block (text, gap, lock) 267px below the
+  /// back bar in the 682px between it and the tab bar, a little above the
+  /// middle; a taller block keeps the same relative position.
+  static const Alignment blockAlignment = Alignment(0, 2 * 267 / 570 - 1);
+
+  final VoidCallback onBack;
+
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
-    return Padding(
+    return Scaffold(
       key: viewKey,
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.xl,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      backgroundColor: AppColors.background,
+      body: Stack(
+        fit: StackFit.expand,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Semantics(
-                  header: true,
-                  child: Text(
-                    LockedOverlayText.restrictedTitle,
-                    style: textTheme.titleLarge,
+          const FlowerBackground(),
+          SafeArea(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                MeditationTopBar(onBack: onBack),
+                const Expanded(
+                  child: LockedOverlay(
+                    title: LockedOverlayText.graduatesOnlySectionTitle,
+                    alignment: blockAlignment,
                   ),
                 ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              const LockedMark(),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          Text(
-            LockedOverlayText.restoreAccessDescription,
-            style: textTheme.bodySmall?.copyWith(color: AppColors.softBlack),
+              ],
+            ),
           ),
         ],
       ),

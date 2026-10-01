@@ -5,6 +5,7 @@ export 'app_tab_bar.dart';
 export 'app_text_field.dart';
 export 'confirm_sheet.dart';
 export 'content_cards.dart';
+export 'flower_background.dart';
 export 'loading_indicator.dart';
 export 'locked_overlay.dart';
 export 'share_button.dart';

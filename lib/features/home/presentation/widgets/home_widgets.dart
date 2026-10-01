@@ -248,7 +248,6 @@ class HomeFeaturedItem extends StatelessWidget {
     this.actionIcon = Icons.arrow_forward_rounded,
     this.color = AppColors.background,
     this.actionVariant = AppButtonVariant.primary,
-    this.isLocked = false,
   });
 
   static const double buttonHeight = AppGridButton.height;
@@ -265,7 +264,6 @@ class HomeFeaturedItem extends StatelessWidget {
   final IconData actionIcon;
   final Color color;
   final AppButtonVariant actionVariant;
-  final bool isLocked;
   final VoidCallback onTap;
 
   @override
@@ -286,16 +284,7 @@ class HomeFeaturedItem extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(child: Text(title, style: textTheme.titleLarge)),
-                  if (isLocked) ...[
-                    const SizedBox(width: AppSpacing.sm),
-                    const LockedMark(),
-                  ],
-                ],
-              ),
+              Text(title, style: textTheme.titleLarge),
               if (subtitle != null && subtitle.isNotEmpty) ...[
                 const SizedBox(height: AppSpacing.sm),
                 LayoutBuilder(

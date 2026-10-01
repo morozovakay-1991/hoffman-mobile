@@ -267,6 +267,13 @@ void main() {
 
       expect(tester.takeException(), isNull);
       expect(find.byKey(MeditationLockedView.viewKey), findsOneWidget);
+      expect(
+        find.text(LockedOverlayText.graduatesOnlySectionTitle),
+        findsOneWidget,
+      );
+      expect(find.byIcon(Icons.lock), findsOneWidget);
+      expect(find.byType(FlowerBackground), findsOneWidget);
+      expect(find.byIcon(MeditationTopBar.backIcon), findsOneWidget);
       expect(find.byKey(MeditationPlayerScreen.playPauseKey), findsNothing);
       expect(harness.engine.loads, isEmpty);
     });
