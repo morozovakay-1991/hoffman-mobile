@@ -30,6 +30,13 @@ void _expectActionLink(WidgetTester tester, String label) {
   );
 }
 
+/// The cover is an [AppGrid.span] of 3 columns, square.
+void _expectGridCover(Size size) {
+  final side = AppGrid.span(_width, 3);
+  expect(size.width, closeTo(side, 0.01));
+  expect(size.height, closeTo(side, 0.01));
+}
+
 void _expectDescription(WidgetTester tester, String text) {
   final style = tester.widget<Text>(find.text(text)).style;
   expect(style?.fontSize, 12);
@@ -90,13 +97,13 @@ void main() {
       _expectActionLink(tester, 'Начать');
     });
 
-    testWidgets('138px cover on the left with a centered play icon', (
+    testWidgets('3-column cover on the left with a centered play icon', (
       tester,
     ) async {
       await pumpThemed(tester, card(), width: _width);
 
       final cover = tester.getRect(find.byKey(_coverKey));
-      expect(cover.size, const Size.square(MeditationCard.coverSize));
+      _expectGridCover(cover.size);
       final play = find.byIcon(Icons.play_arrow_rounded);
       expect(tester.getCenter(play), cover.center);
       expect(tester.widget<Icon>(play).size, 24);
@@ -142,13 +149,13 @@ void main() {
       _expectActionLink(tester, 'Читать');
     });
 
-    testWidgets('138x110 cover on the right, without a play icon', (
+    testWidgets('3-column square cover on the right, without a play icon', (
       tester,
     ) async {
       await pumpThemed(tester, card(), width: _width);
 
       final cover = tester.getRect(find.byKey(_coverKey));
-      expect(cover.size, ArticleListCard.coverSize);
+      _expectGridCover(cover.size);
       expect(
         tester.getTopRight(find.text('Март, 2025')).dx,
         lessThan(cover.left),
@@ -312,7 +319,7 @@ void main() {
       expect(find.text('Читать'), findsNothing);
     });
 
-    testWidgets('expanded: – icon, 130px cover, body and action link', (
+    testWidgets('expanded: – icon, 3-column cover, body and action link', (
       tester,
     ) async {
       await pumpThemed(tester, card(isExpanded: true), width: _width);
@@ -322,10 +329,7 @@ void main() {
         tester.widget<Icon>(find.byIcon(Icons.remove)).size,
         ThemeListCard.collapseIconSize,
       );
-      expect(
-        tester.getSize(find.byKey(_coverKey)),
-        const Size.square(ThemeListCard.coverSize),
-      );
+      _expectGridCover(tester.getSize(find.byKey(_coverKey)));
       expect(find.byIcon(Icons.play_arrow_rounded), findsNothing);
       _expectDescription(tester, 'Первый абзац.\nВторой абзац.');
       _expectActionLink(tester, 'Читать');
@@ -467,6 +471,172 @@ void main() {
 
     await tester.tap(find.text('Границы'));
     expect((cardTaps, actionTaps), (1, 1));
+  });
+
+  group('AppGrid layout', () {
+    // The Figma width and a narrow phone (360 − 2 × 16).
+    const widths = [_width, 328.0];
+    const tolerance = 0.01;
+    const arrow = Icons.arrow_forward_rounded;
+
+    Rect cardRect(WidgetTester tester, Type card) =>
+        tester.getRect(find.byType(card));
+
+    for (final width in widths) {
+      group('at ${width}px', () {
+        final cover = AppGrid.span(width, 3);
+        final boundary = AppGrid.boundary(width, 4);
+
+        testWidgets('MeditationCard: 3-column cover, then a 1-column gap, '
+            'details span 4 columns to the right edge', (tester) async {
+          await pumpThemed(
+            tester,
+            const MeditationCard(
+              title: 'Visioning – образ будущего',
+              cover: _cover,
+              duration: '25 минут',
+              description: 'Описание медитации',
+              actionLabel: 'Начать',
+            ),
+            width: width,
+          );
+          final card = cardRect(tester, MeditationCard);
+
+          final coverRect = tester.getRect(find.byKey(_coverKey));
+          expect(coverRect.left, closeTo(card.left, tolerance));
+          expect(coverRect.width, closeTo(cover, tolerance));
+          expect(coverRect.height, closeTo(cover, tolerance));
+          for (final start in [
+            find.byIcon(Icons.watch_later),
+            find.text('Описание медитации'),
+            find.text('Начать'),
+          ]) {
+            expect(
+              tester.getTopLeft(start).dx - card.left,
+              closeTo(boundary, tolerance),
+            );
+          }
+          expect(
+            card.right - boundary - card.left,
+            closeTo(AppGrid.span(width, 4), tolerance),
+          );
+          expect(
+            tester.getTopRight(find.byIcon(arrow)).dx,
+            closeTo(card.right, tolerance),
+          );
+          expect(tester.takeException(), isNull);
+        });
+
+        testWidgets('ThemeListCard expanded: 3-column cover, then a '
+            '1-column gap, details span 4 columns to the right edge', (
+          tester,
+        ) async {
+          await pumpThemed(
+            tester,
+            const ThemeListCard(
+              title: 'Границы',
+              subtitle: 'сложности в отношениях / границы',
+              cover: _cover,
+              body: 'Первый абзац.\nВторой абзац.',
+              actionLabel: 'Читать',
+              isExpanded: true,
+            ),
+            width: width,
+          );
+          final card = cardRect(tester, ThemeListCard);
+
+          final coverRect = tester.getRect(find.byKey(_coverKey));
+          expect(coverRect.left, closeTo(card.left, tolerance));
+          expect(coverRect.width, closeTo(cover, tolerance));
+          expect(coverRect.height, closeTo(cover, tolerance));
+          for (final start in [
+            find.text('Первый абзац.\nВторой абзац.'),
+            find.text('Читать'),
+          ]) {
+            expect(
+              tester.getTopLeft(start).dx - card.left,
+              closeTo(boundary, tolerance),
+            );
+          }
+          expect(
+            tester.getTopRight(find.byIcon(arrow)).dx,
+            closeTo(card.right, tolerance),
+          );
+          expect(tester.takeException(), isNull);
+        });
+
+        testWidgets('ArticleListCard: the link arrow and the badge end at '
+            'the 4-column boundary, 3-column square cover at the right edge', (
+          tester,
+        ) async {
+          await pumpThemed(
+            tester,
+            const ArticleListCard(
+              title: 'Стресс',
+              cover: _cover,
+              date: 'Март, 2025',
+              description: 'Откуда они берутся и как с ними обходиться',
+              actionLabel: 'Читать',
+              badge: 'новое',
+            ),
+            width: width,
+          );
+          final card = cardRect(tester, ArticleListCard);
+
+          expect(
+            tester.getTopRight(find.byIcon(arrow)).dx - card.left,
+            closeTo(boundary, tolerance),
+          );
+          expect(
+            tester.getTopRight(find.byType(AppBadge)).dx - card.left,
+            closeTo(boundary, tolerance),
+          );
+          expect(
+            tester
+                    .getTopRight(
+                      find.text(
+                        bindShortWords(
+                          'Откуда они берутся и как с ними обходиться',
+                        ),
+                      ),
+                    )
+                    .dx -
+                card.left,
+            lessThanOrEqualTo(boundary + tolerance),
+          );
+          final coverRect = tester.getRect(find.byKey(_coverKey));
+          expect(coverRect.right, closeTo(card.right, tolerance));
+          expect(coverRect.width, closeTo(cover, tolerance));
+          expect(coverRect.height, closeTo(cover, tolerance));
+          expect(tester.takeException(), isNull);
+        });
+
+        testWidgets('ToolListCard: the link arrow ends at the 4-column '
+            'boundary', (tester) async {
+          await pumpThemed(
+            tester,
+            const ToolListCard(
+              title: 'Выражение гнева',
+              description: 'Описание инструмента',
+              tag: 'выражение',
+              actionLabel: 'Читать',
+            ),
+            width: width,
+          );
+          final card = cardRect(tester, ToolListCard);
+
+          expect(
+            tester.getTopLeft(find.text('Читать')).dx,
+            closeTo(card.left, tolerance),
+          );
+          expect(
+            tester.getTopRight(find.byIcon(arrow)).dx - card.left,
+            closeTo(boundary, tolerance),
+          );
+          expect(tester.takeException(), isNull);
+        });
+      });
+    }
   });
 
   group('ContentCardList', () {
@@ -651,8 +821,9 @@ void main() {
           final below = line.top - contentBottom;
           final above = nextTitleTop - line.bottom;
           final gaps = 'content → line $below, line → title $above';
-          expect(below, AppSpacing.md, reason: gaps);
-          expect(above, AppSpacing.md, reason: gaps);
+          // The cover is a fractional AppGrid span: compare with a tolerance.
+          expect(below, closeTo(AppSpacing.md, 1e-9), reason: gaps);
+          expect(above, closeTo(AppSpacing.md, 1e-9), reason: gaps);
         });
       }
     },
