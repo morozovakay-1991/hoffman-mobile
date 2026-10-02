@@ -226,6 +226,19 @@ class WidgetsShowcaseScreen extends StatelessWidget {
           ),
           const _Section('LockedOverlay — lockedDay'),
           const SizedBox(height: 200, child: LockedOverlay.lockedDay()),
+          const _Section('LockedOverlay — graduates only (139:5278)'),
+          const SizedBox(
+            height: 260,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                FlowerBackground(),
+                LockedOverlay(
+                  title: LockedOverlayText.graduatesOnlySectionTitle,
+                ),
+              ],
+            ),
+          ),
           const _Section('ConfirmSheet — tap to open'),
           Builder(
             builder: (context) => Wrap(

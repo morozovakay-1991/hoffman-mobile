@@ -30,8 +30,7 @@ class SplashScreen extends ConsumerStatefulWidget {
   static Duration get totalDuration =>
       phaseDurations.fold(Duration.zero, (sum, d) => sum + d);
 
-  static const String backgroundAsset =
-      'assets/images/splash/splash_background.png';
+  static const String backgroundAsset = FlowerBackground.asset;
   static const String logoAsset = 'assets/images/splash/hoffman_logo.png';
 
   @override
@@ -106,7 +105,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          const _SplashBackground(),
+          const FlowerBackground(),
           // Figma centers the phases on the whole frame, not the safe area.
           if (_failed)
             SafeArea(
@@ -129,79 +128,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
             ),
         ],
       ),
-    );
-  }
-}
-
-/// The flower photo at 20% opacity over white, cropped exactly like the
-/// Figma `CROP` image fill of 131:2674 (a rotated crop).
-class _SplashBackground extends StatelessWidget {
-  const _SplashBackground();
-
-  /// Figma `imageTransform`: maps frame-normalized coordinates (u, v) to
-  /// image-normalized ones — `image = A · (u, v) + t`.
-  static const double _a = 0.45181095600128174;
-  static const double _b = 0.3245818316936493;
-  static const double _tx = 0.0041295001283288;
-  static const double _c = -0.10557114332914352;
-  static const double _d = 0.6906721591949463;
-  static const double _ty = 0.20737136900424957;
-
-  /// The inverse mapping in pixels: the image, stretched over a w×h box, is
-  /// placed so that each frame pixel shows the image point Figma shows.
-  static Matrix4 _transform(double w, double h) {
-    const det = _a * _d - _b * _c;
-    const ia = _d / det;
-    const ib = -_b / det;
-    const ic = -_c / det;
-    const id = _a / det;
-    // p = S · A⁻¹ · (S⁻¹ · q − t), with S = diag(w, h).
-    return Matrix4(
-      ia,
-      ic * h / w,
-      0,
-      0, //
-      ib * w / h,
-      id,
-      0,
-      0,
-      0,
-      0,
-      1,
-      0,
-      -(ia * _tx + ib * _ty) * w,
-      -(ic * _tx + id * _ty) * h,
-      0,
-      1,
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final w = constraints.maxWidth;
-        final h = constraints.maxHeight;
-        return Opacity(
-          opacity: 0.2,
-          child: ClipRect(
-            child: OverflowBox(
-              alignment: Alignment.topLeft,
-              maxWidth: w,
-              maxHeight: h,
-              child: Transform(
-                transform: _transform(w, h),
-                child: Image.asset(
-                  SplashScreen.backgroundAsset,
-                  width: w,
-                  height: h,
-                  fit: BoxFit.fill,
-                ),
-              ),
-            ),
-          ),
-        );
-      },
     );
   }
 }

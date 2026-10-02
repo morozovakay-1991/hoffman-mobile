@@ -248,15 +248,16 @@ void main() {
       expect(currentPath(container), AppRoutes.topic(22));
     });
 
-    testWidgets('locked meditations are marked with a lock; tools and '
-        'topics never are, whatever is_locked says', (tester) async {
+    testWidgets('no card or featured item shows a lock, whatever '
+        'is_locked says', (tester) async {
       await pumpApp(
         tester,
         homeEnv({
           getHome: homeResponse(
-            meditations: sectionJson(meditationJson(1, 'Открытая'), [
-              meditationJson(2, 'Закрытая', isLocked: true),
-            ]),
+            meditations: sectionJson(
+              meditationJson(1, 'Закрытая главная', isLocked: true),
+              [meditationJson(2, 'Закрытая', isLocked: true)],
+            ),
             tools: sectionJson(toolJson(11, 'Инструмент', isLocked: true), [
               toolJson(12, 'Ещё инструмент', isLocked: true),
             ]),
@@ -268,19 +269,12 @@ void main() {
       );
 
       expect(
-        tester.widget<MeditationCard>(find.byType(MeditationCard)).isLocked,
-        isTrue,
+        find.text('Закрытая главная', skipOffstage: false),
+        findsOneWidget,
       );
-      final featured = tester
-          .widgetList<HomeFeaturedItem>(
-            find.byType(HomeFeaturedItem, skipOffstage: false),
-          )
-          .map((f) => (f.title, f.isLocked));
-      expect(featured, contains(('Открытая', false)));
-      expect(featured, contains(('Инструмент', false)));
-      expect(featured, contains(('Тема', false)));
-      // The one on the locked meditation card only.
-      expect(find.byType(LockedMark, skipOffstage: false), findsOneWidget);
+      expect(find.text('Закрытая', skipOffstage: false), findsOneWidget);
+      expect(find.byType(LockedMark, skipOffstage: false), findsNothing);
+      expect(find.byIcon(Icons.lock, skipOffstage: false), findsNothing);
     });
 
     testWidgets('an empty section says so and keeps its "все"', (tester) async {
@@ -526,29 +520,87 @@ void main() {
       expect(currentPath(container), AppRoutes.diary);
     });
 
-    testWidgets('not available to an unverified user: no progress, '
-        'verification is offered', (tester) async {
-      final container = await pumpApp(
-        tester,
-        homeEnv({getHome: homeResponse(diary: diaryJson(available: false))}),
-      );
-
-      expect(find.byType(DiaryProgressBar, skipOffstage: false), findsNothing);
+    // Not a confirmed graduate: no diary section at all — no cover, no
+    // "все", no lock, no verification prompt; the articles follow topics.
+    void expectNoDiarySection(WidgetTester tester) {
       expect(
+        tester
+            .widgetList<HomeSectionCover>(
+              find.byType(HomeSectionCover, skipOffstage: false),
+            )
+            .map((c) => c.title),
+        [
+          HomeText.meditations,
+          HomeText.tools,
+          HomeText.topics,
+          HomeText.articles,
+        ],
+      );
+      for (final finder in [
+        find.byKey(HomeScreen.seeAllKey(AppRoutes.diary), skipOffstage: false),
+        find.byKey(HomeScreen.diaryLockedKey, skipOffstage: false),
         find.byKey(HomeScreen.diaryContinueKey, skipOffstage: false),
-        findsNothing,
-      );
-      expect(
+        find.byType(DiaryProgressBar, skipOffstage: false),
+        find.byType(LockedMark, skipOffstage: false),
+        find.byIcon(Icons.lock, skipOffstage: false),
+        find.text(HomeText.diary, skipOffstage: false),
         find.text(LockedOverlayText.graduateOnlyTitle, skipOffstage: false),
+        find.text(LockedOverlayText.restrictedTitle, skipOffstage: false),
+        find.text(LockedOverlayText.verify, skipOffstage: false),
+      ]) {
+        expect(finder, findsNothing);
+      }
+    }
+
+    for (final (name, status) in [
+      ('never verified', verification(null)),
+      ('pending', verification('pending')),
+      ('rejected', verification('rejected')),
+      ('status failed to load', FakeResponse.error(500, 'SERVER_ERROR')),
+    ]) {
+      testWidgets('not a confirmed graduate ($name): no diary section', (
+        tester,
+      ) async {
+        await pumpApp(
+          tester,
+          homeEnv({
+            getHome: homeResponse(diary: diaryJson(available: false)),
+            verificationStatus: status,
+          }),
+        );
+
+        expect(find.byType(HomeScreen), findsOneWidget);
+        expectNoDiarySection(tester);
+      });
+    }
+
+    testWidgets('no diary section while the graduate status is loading', (
+      tester,
+    ) async {
+      await pumpApp(
+        tester,
+        homeEnv({
+          getHome: homeResponse(diary: diaryJson(available: false)),
+          verificationStatus: verification(
+            'confirmed',
+            delay: const Duration(seconds: 5),
+          ),
+        }),
+        skipSplash: false,
+      );
+      await tester.pump();
+      await tester.pump(SplashScreen.totalDuration);
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.byType(HomeSectionCover), findsWidgets);
+      expectNoDiarySection(tester);
+
+      // Confirmed once loaded: the section appears.
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(HomeScreen.diaryLockedKey, skipOffstage: false),
         findsOneWidget,
       );
-
-      await tester.ensureVisible(find.byKey(HomeScreen.diaryVerifyKey));
-      expectGridButton(tester, find.byKey(HomeScreen.diaryVerifyKey));
-
-      await tapAndSettle(tester, find.byKey(HomeScreen.diaryVerifyKey));
-      expect(currentPath(container), AppRoutes.verification);
-      expect(find.byType(GraduateQuestionScreen), findsOneWidget);
     });
 
     testWidgets('not available to a confirmed graduate: restore access, no '
@@ -562,11 +614,15 @@ void main() {
       );
 
       expect(
+        find.byKey(HomeScreen.seeAllKey(AppRoutes.diary), skipOffstage: false),
+        findsOneWidget,
+      );
+      expect(
         find.byKey(HomeScreen.diaryLockedKey, skipOffstage: false),
         findsOneWidget,
       );
       expect(
-        find.byKey(HomeScreen.diaryVerifyKey, skipOffstage: false),
+        find.text(LockedOverlayText.verify, skipOffstage: false),
         findsNothing,
       );
       expect(

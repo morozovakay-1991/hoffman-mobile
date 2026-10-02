@@ -126,17 +126,24 @@ FakeResponse homeResponse({
 }
 
 /// Backend `VerificationRequestResource`, or no request at all.
-FakeResponse verification(String? status) => FakeResponse(200, {
-  'verification_request': status == null
-      ? null
-      : {
-          'id': 1,
-          'status': status,
-          'last_name': 'Иванова',
-          'first_name': 'Анна',
-          'phone': '+79990000000',
-        },
-});
+/// `GET /verification/status`, answered after [delay].
+FakeResponse verification(String? status, {Duration delay = Duration.zero}) =>
+    FakeResponse(
+      200,
+      {
+        'verification_request': status == null
+            ? null
+            : {
+                'id': 1,
+                'status': status,
+                'last_name': 'Иванова',
+                'first_name': 'Анна',
+                'phone': '+79990000000',
+              },
+      },
+      const {},
+      delay,
+    );
 
 /// `GET /articles`: [featured] (or none) and the other [items].
 FakeResponse articlesResponse(

@@ -44,7 +44,6 @@ void main() {
       );
       expect(featured.title, 'Что такое Процесс?');
       expect(featured.actionLabel, HomeText.read);
-      expect(featured.isLocked, isFalse);
 
       final cards = tester
           .widgetList<ArticleListCard>(
@@ -57,9 +56,9 @@ void main() {
         'Описание: Стресс',
         'Описание: Роли в семье',
       ]);
-      // Articles are never locked.
-      expect(cards.map((c) => c.isLocked), [false, false]);
+      // Articles are never locked: no lock anywhere on the list.
       expect(find.byType(LockedMark, skipOffstage: false), findsNothing);
+      expect(find.byIcon(Icons.lock, skipOffstage: false), findsNothing);
       // The card cover is cover_image_url as is.
       expect((cards.first.cover as HomeCoverImage).url, Uri.parse(cover));
       // featured is never repeated among the cards.

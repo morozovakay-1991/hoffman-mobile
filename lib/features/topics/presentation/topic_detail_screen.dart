@@ -315,7 +315,6 @@ class _RelatedMeditations extends StatelessWidget {
             duration: HomeText.duration(meditation.durationSeconds),
             description: meditation.shortDescription,
             actionLabel: MeditationsText.start,
-            isLocked: meditation.isLocked,
             onTap: () => context.push(AppRoutes.meditation(meditation.id)),
           ),
       ],

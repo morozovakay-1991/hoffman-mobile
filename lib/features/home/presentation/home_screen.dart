@@ -18,14 +18,14 @@ import 'package:hoffman/features/home/presentation/widgets/home_widgets.dart';
 /// highlights its featured item (chosen in the admin; the cover shows and
 /// opens it too) and lists the rest with the `core/widgets` content cards. Everything comes from a single `GET /home`.
 ///
-/// The diary block trusts the backend's `is_available` alone: the progress
-/// and "Продолжить" are shown only to users the backend lets in.
+/// The diary section is for confirmed graduates only: for anyone else it is
+/// not there at all (see [_DiarySection]). The progress and "Продолжить"
+/// are shown only to users the backend lets in (`is_available`).
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   static const Key menuKey = ValueKey('home-menu');
   static const Key diaryContinueKey = ValueKey('home-diary-continue');
-  static const Key diaryVerifyKey = ValueKey('home-diary-verify');
   static const Key diaryLockedKey = ValueKey('home-diary-locked');
 
   static Key seeAllKey(String route) => ValueKey('home-see-all-$route');
@@ -280,7 +280,6 @@ class _MeditationsSection extends StatelessWidget {
             ),
             actionLabel: HomeText.start,
             actionIcon: Icons.play_arrow_rounded,
-            isLocked: featured.isLocked,
             onTap: () => open(featured),
           ),
         ContentCardList(
@@ -295,7 +294,6 @@ class _MeditationsSection extends StatelessWidget {
                 duration: HomeText.duration(item.durationSeconds),
                 description: item.shortDescription,
                 actionLabel: HomeText.start,
-                isLocked: item.isLocked,
                 onTap: () => open(item),
               ),
           ],
@@ -436,6 +434,12 @@ class _TopicsSectionState extends State<_TopicsSection> {
   }
 }
 
+/// The diary section, only for a confirmed graduate: the backend lets the
+/// user in (`is_available`, which requires `graduate_status: confirmed`) or
+/// `GET /verification/status` says `confirmed` — the same source as the
+/// profile's graduate block. Otherwise (not verified, pending, rejected,
+/// the status still loading or failed to load) the section is not built at
+/// all, as if the home screen had no diary.
 class _DiarySection extends ConsumerWidget {
   const _DiarySection(this.progress);
 
@@ -443,6 +447,10 @@ class _DiarySection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isGraduate =
+        ref.watch(currentVerificationProvider).value?.isConfirmed ?? false;
+    if (!progress.isAvailable && !isGraduate) return const SizedBox.shrink();
+
     final currentDay = progress.currentDay;
 
     return Column(
@@ -485,21 +493,16 @@ class _DiarySection extends ConsumerWidget {
   }
 }
 
-/// The diary block for a user the backend keeps out: graduate status not
-/// confirmed → verification; confirmed → access has to be restored. Waits
-/// for the status before offering verification, so a confirmed graduate
-/// never sees that prompt flash.
+/// The diary block for a confirmed graduate the backend keeps out (no
+/// active access): access has to be restored.
 // TODO(figma): no locked diary block in the mockups; styled after
 // LockedOverlay.
-class _DiaryLocked extends ConsumerWidget {
+class _DiaryLocked extends StatelessWidget {
   const _DiaryLocked();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final verification = ref.watch(currentVerificationProvider);
-    final needsVerification =
-        verification.hasValue && !(verification.value?.isConfirmed ?? false);
 
     return Column(
       key: HomeScreen.diaryLockedKey,
@@ -510,9 +513,7 @@ class _DiaryLocked extends ConsumerWidget {
           children: [
             Expanded(
               child: Text(
-                needsVerification
-                    ? LockedOverlayText.graduateOnlyTitle
-                    : LockedOverlayText.restrictedTitle,
+                LockedOverlayText.restrictedTitle,
                 style: textTheme.titleLarge,
               ),
             ),
@@ -521,18 +522,10 @@ class _DiaryLocked extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: AppSpacing.lg),
-        if (needsVerification)
-          AppGridButton(
-            key: HomeScreen.diaryVerifyKey,
-            label: LockedOverlayText.verify,
-            trailingIcon: Icons.arrow_forward_rounded,
-            onPressed: () => context.push(AppRoutes.verification),
-          )
-        else
-          Text(
-            LockedOverlayText.restoreAccessDescription,
-            style: textTheme.bodySmall?.copyWith(color: AppColors.softBlack),
-          ),
+        Text(
+          LockedOverlayText.restoreAccessDescription,
+          style: textTheme.bodySmall?.copyWith(color: AppColors.softBlack),
+        ),
       ],
     );
   }
@@ -575,7 +568,6 @@ class _ArticlesSection extends StatelessWidget {
                   ),
             actionLabel: HomeText.read,
             color: AppColors.lightBlueTint,
-            isLocked: featured.isLocked,
             onTap: () => open(featured),
           ),
         ContentCardList(
@@ -591,7 +583,6 @@ class _ArticlesSection extends StatelessWidget {
                 description: item.shortDescription,
                 actionLabel: HomeText.read,
                 badge: HomeText.articleBadge(isNew: item.isNew),
-                isLocked: item.isLocked,
                 onTap: () => open(item),
               ),
           ],

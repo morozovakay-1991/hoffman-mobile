@@ -143,6 +143,26 @@ void main() {
       );
     });
 
+    testWidgets('centers the block by default; alignment moves it', (
+      tester,
+    ) async {
+      const title = LockedOverlayText.graduatesOnlySectionTitle;
+      final overlay = find.byType(LockedOverlay);
+
+      await _pump(tester, const LockedOverlay(title: title));
+      final centered = tester.getRect(find.text(title));
+      final lock = tester.getRect(find.byIcon(Icons.lock));
+      final box = tester.getRect(overlay);
+      expect((centered.top + lock.bottom) / 2, closeTo(box.center.dy, 0.5));
+
+      await _pump(
+        tester,
+        const LockedOverlay(title: title, alignment: Alignment.topCenter),
+      );
+      expect(tester.getRect(find.text(title)).top, box.top);
+      expect(tester.getRect(find.text(title)).center.dx, box.center.dx);
+    });
+
     testWidgets('locked child is drawn but not tappable or announced', (
       tester,
     ) async {
@@ -200,6 +220,18 @@ void main() {
           );
         }
       }
+    });
+
+    test('the graduates-only title of 139:5278 is an ordinary preset, under '
+        'the same wording check', () {
+      expect(
+        LockedOverlayText.graduatesOnlySectionTitle,
+        'Этот раздел доступен только для выпускников Процесса Хоффмана',
+      );
+      expect(
+        LockedOverlayText.all,
+        contains(LockedOverlayText.graduatesOnlySectionTitle),
+      );
     });
 
     test('actions are limited to the approved labels', () {

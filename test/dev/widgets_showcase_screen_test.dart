@@ -89,6 +89,7 @@ void main() {
       'Восстановить доступ',
       'Пройти верификацию',
       LockedOverlayText.lockedDayTitle,
+      LockedOverlayText.graduatesOnlySectionTitle,
     ]) {
       await tester.scrollUntilVisible(
         find.text(label),

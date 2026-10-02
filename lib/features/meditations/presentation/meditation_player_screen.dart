@@ -57,11 +57,12 @@ class MeditationPlayerScreen extends ConsumerWidget {
     final error = player.error ?? meditation.error;
 
     if (error != null && !player.isLoading) {
+      if (isAccessDenied(error)) {
+        return MeditationLockedView(onBack: () => _back(context));
+      }
       return _Plain(
         onBack: () => _back(context),
-        child: isAccessDenied(error)
-            ? const MeditationLockedView()
-            : isNotFound(error)
+        child: isNotFound(error)
             ? const EmptyStateWidget(message: MeditationsText.notFound)
             : ErrorStateWidget(
                 message: MeditationsText.errorText(
