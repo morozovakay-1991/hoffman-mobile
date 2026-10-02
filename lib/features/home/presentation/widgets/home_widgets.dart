@@ -7,35 +7,54 @@ import 'package:hoffman/features/home/presentation/home_text.dart';
 // opens every section, the featured item under it and the diary progress
 // panel.
 
-/// A content cover loaded from [url], or the bundled [fallback] image when
-/// there is no URL or it cannot be loaded (e.g. offline).
+/// A content cover loaded from [url]. Without a URL, or when it cannot be
+/// loaded (e.g. offline), the bundled [fallback] image or, without one,
+/// the neutral [HomeCoverPlaceholder].
 class HomeCoverImage extends StatelessWidget {
-  const HomeCoverImage({required this.url, required this.fallback, super.key});
+  const HomeCoverImage({required this.url, this.fallback, super.key});
 
   final Uri? url;
 
-  /// Asset path of the section's stock image.
-  final String fallback;
+  /// Asset path of the section's stock image; `null` shows
+  /// [HomeCoverPlaceholder] instead.
+  final String? fallback;
 
   @override
   Widget build(BuildContext context) {
-    final asset = Image.asset(fallback, fit: BoxFit.cover);
+    final fallback = this.fallback;
+    final missing = fallback == null
+        ? const HomeCoverPlaceholder()
+        : Image.asset(fallback, fit: BoxFit.cover);
     final url = this.url;
-    if (url == null) return asset;
+    if (url == null) return missing;
 
     return Image.network(
       url.toString(),
       fit: BoxFit.cover,
-      errorBuilder: (_, _, _) => asset,
+      errorBuilder: (_, _, _) => missing,
     );
+  }
+}
+
+/// Stands in for a missing cover: a plain `Blue tint` fill, no stock image.
+class HomeCoverPlaceholder extends StatelessWidget {
+  const HomeCoverPlaceholder({super.key});
+
+  static const Color color = AppColors.blueTint;
+
+  @override
+  Widget build(BuildContext context) {
+    return const ColoredBox(color: color, child: SizedBox.expand());
   }
 }
 
 /// Section promo cover, e.g. `Медитации` (612:7219): a 350px image with the
 /// section title, the `все` badge leading to the full list, and a subtitle.
 ///
-/// The image is the cover of the section's featured item ([imageUrl]),
-/// falling back to the stock [image]. With [onTap] the cover opens that
+/// The image is the cover of the section's featured item ([imageUrl]); with
+/// no featured item, or one without a cover, [HomeCoverPlaceholder]. A
+/// section that never has a featured item (the diary) passes its stock
+/// [image] instead. With [onTap] the cover opens that
 /// item; the `все` badge keeps leading to the list. The section's own list
 /// screen heads with it too, without the badge ([onSeeAll] `null`) or with
 /// a badge to a sibling section ([seeAllLabel], e.g. `темы` on the tools).
@@ -43,12 +62,12 @@ class HomeCoverImage extends StatelessWidget {
 /// ([underStatusBar]), like the cover of a detail screen.
 class HomeSectionCover extends StatelessWidget {
   const HomeSectionCover({
-    required this.image,
     required this.title,
     required this.subtitle,
     required this.onSeeAll,
     super.key,
     this.imageUrl,
+    this.image,
     this.onTap,
     this.tapLabel,
     this.coverKey,
@@ -80,9 +99,12 @@ class HomeSectionCover extends StatelessWidget {
   /// Top of the 30% black gradient behind white text (612:7219).
   static const Color _shade = Color(0x4D000000);
 
-  /// Asset path of the stock image.
-  final String image;
+  /// Cover of the featured item; `null` shows [HomeCoverPlaceholder].
   final Uri? imageUrl;
+
+  /// Asset path of the stock image of a section without a featured item
+  /// (the diary); `null` shows [HomeCoverPlaceholder] in its place.
+  final String? image;
   final String title;
   final String subtitle;
 
