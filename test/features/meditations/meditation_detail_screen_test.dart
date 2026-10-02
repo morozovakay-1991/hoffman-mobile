@@ -6,6 +6,7 @@ import 'package:hoffman/core/router/index.dart';
 import 'package:hoffman/core/theme/index.dart';
 import 'package:hoffman/core/widgets/index.dart';
 import 'package:hoffman/features/auth/index.dart';
+import 'package:hoffman/features/home/index.dart';
 import 'package:hoffman/features/meditations/index.dart';
 
 import '../../helpers/app_harness.dart';
@@ -33,6 +34,38 @@ void main() {
       );
       // Nothing is played before the player opens.
       expect(harness.backend.requestsTo(getAudio(1)), isEmpty);
+    });
+
+    testWidgets('the cover runs up under the status bar, the back and share '
+        'icons sit below it', (tester) async {
+      final harness = MeditationsHarness();
+      await harness.open(tester, AppRoutes.meditation(1));
+
+      final statusBar = MediaQuery.paddingOf(
+        tester.element(find.byType(MeditationDetailScreen)),
+      ).top;
+      expect(statusBar, greaterThan(0));
+
+      final cover = tester.getRect(find.byKey(MeditationDetailScreen.coverKey));
+      expect(cover.top, 0);
+      expect(cover.height, statusBar + MeditationDetailScreen.coverHeight);
+      expect(
+        find.descendant(
+          of: find.byKey(MeditationDetailScreen.coverKey),
+          matching: find.byType(HomeCoverImage),
+        ),
+        findsOneWidget,
+      );
+
+      final topBar = tester.getRect(find.byType(MeditationTopBar));
+      expect(topBar.top, statusBar);
+      expect(
+        find.descendant(
+          of: find.byKey(MeditationDetailScreen.coverKey),
+          matching: find.byType(MeditationShareButton),
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('the player button pushes /meditations/:id/player', (

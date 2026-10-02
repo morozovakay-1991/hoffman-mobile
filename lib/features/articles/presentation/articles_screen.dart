@@ -112,7 +112,6 @@ class _Catalog extends StatelessWidget {
       children: [
         HomeSectionCover(
           underStatusBar: true,
-          image: HomeScreen.articlesCover,
           imageUrl: featured?.coverImageUrl,
           title: HomeText.articles,
           subtitle: HomeText.articlesSubtitle,

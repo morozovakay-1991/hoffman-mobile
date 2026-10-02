@@ -16,6 +16,9 @@ import 'package:hoffman/features/profile/index.dart';
 /// duration, short and full description, the share icon and the button to
 /// the player.
 ///
+/// The cover runs up under the status bar, with the back chevron and the
+/// share icon over it, like [HomeSectionCover.underStatusBar].
+///
 /// A 403 `ACCESS_DENIED` shows the full-screen [MeditationLockedView]
 /// instead — the content and the player are never offered.
 // TODO(figma): no meditation mockup yet.
@@ -26,6 +29,9 @@ class MeditationDetailScreen extends ConsumerWidget {
   final int? id;
 
   static const Key playerButtonKey = ValueKey('meditation-player-button');
+  static const Key coverKey = ValueKey('meditation-cover');
+
+  /// Height below the status bar.
   static const double coverHeight = 350;
 
   static String playerRoute(int id) => '${AppRoutes.meditation(id)}/player';
@@ -46,11 +52,17 @@ class MeditationDetailScreen extends ConsumerWidget {
       return MeditationLockedView(onBack: () => _back(context));
     }
 
+    if (meditation?.value case final value?) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        body: _Content(value, onBack: () => _back(context)),
+      );
+    }
+
     final body = switch (meditation) {
       null => const _Centered(
         child: EmptyStateWidget(message: MeditationsText.notFound),
       ),
-      AsyncValue(:final value?) => _Content(value),
       AsyncValue(:final error?) when isNotFound(error) => const _Centered(
         child: EmptyStateWidget(message: MeditationsText.notFound),
       ),
@@ -73,12 +85,7 @@ class MeditationDetailScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            MeditationTopBar(
-              onBack: () => _back(context),
-              trailing: meditation?.value == null
-                  ? null
-                  : MeditationShareButton(meditation: meditation!.value!),
-            ),
+            MeditationTopBar(onBack: () => _back(context)),
             Expanded(child: body),
           ],
         ),
@@ -102,27 +109,42 @@ class _Centered extends StatelessWidget {
 }
 
 class _Content extends ConsumerWidget {
-  const _Content(this.meditation);
+  const _Content(this.meditation, {required this.onBack});
 
   final Meditation meditation;
+  final VoidCallback onBack;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final textTheme = Theme.of(context).textTheme;
+    final padding = MediaQuery.paddingOf(context);
     final fullDescription = meditation.fullDescription?.trim() ?? '';
 
     return SingleChildScrollView(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.paddingOf(context).bottom + AppSpacing.xl,
-      ),
+      padding: EdgeInsets.only(bottom: padding.bottom + AppSpacing.xl),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           SizedBox(
-            height: MeditationDetailScreen.coverHeight,
-            child: HomeCoverImage(
-              url: meditation.coverImageUrl,
-              fallback: HomeScreen.meditationsCover,
+            key: MeditationDetailScreen.coverKey,
+            height: padding.top + MeditationDetailScreen.coverHeight,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                HomeCoverImage(
+                  url: meditation.coverImageUrl,
+                  fallback: HomeScreen.meditationsCover,
+                ),
+                Positioned(
+                  top: padding.top,
+                  left: 0,
+                  right: 0,
+                  child: MeditationTopBar(
+                    onBack: onBack,
+                    trailing: MeditationShareButton(meditation: meditation),
+                  ),
+                ),
+              ],
             ),
           ),
           Padding(

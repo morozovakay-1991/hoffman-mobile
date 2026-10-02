@@ -258,7 +258,6 @@ class _MeditationsSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         HomeSectionCover(
-          image: HomeScreen.meditationsCover,
           imageUrl: featured?.coverImageUrl,
           title: HomeText.meditations,
           subtitle: HomeText.meditationsSubtitle,
@@ -317,7 +316,6 @@ class _ToolsSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         HomeSectionCover(
-          image: HomeScreen.toolsCover,
           imageUrl: featured?.coverImageUrl,
           title: HomeText.tools,
           subtitle: HomeText.toolsSubtitle,
@@ -388,7 +386,6 @@ class _TopicsSectionState extends State<_TopicsSection> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         HomeSectionCover(
-          image: HomeScreen.topicsCover,
           imageUrl: featured?.coverImageUrl,
           title: HomeText.topics,
           subtitle: HomeText.topicsSubtitle,
@@ -545,7 +542,6 @@ class _ArticlesSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         HomeSectionCover(
-          image: HomeScreen.articlesCover,
           imageUrl: featured?.coverImageUrl,
           title: HomeText.articles,
           subtitle: HomeText.articlesSubtitle,

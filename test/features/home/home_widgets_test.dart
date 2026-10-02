@@ -158,6 +158,52 @@ void main() {
     });
   });
 
+  group('HomeCoverImage', () {
+    Future<void> pump(WidgetTester tester, HomeCoverImage image) =>
+        tester.pumpWidget(
+          MaterialApp(
+            home: Center(child: SizedBox.square(dimension: 100, child: image)),
+          ),
+        );
+
+    testWidgets('without a URL or a fallback: the placeholder', (tester) async {
+      await pump(tester, const HomeCoverImage(url: null));
+
+      expect(find.byType(HomeCoverPlaceholder), findsOneWidget);
+      expect(find.byType(Image), findsNothing);
+      expect(
+        tester.getSize(find.byType(HomeCoverPlaceholder)),
+        const Size.square(100),
+      );
+      expect(
+        tester
+            .widget<ColoredBox>(
+              find.descendant(
+                of: find.byType(HomeCoverPlaceholder),
+                matching: find.byType(ColoredBox),
+              ),
+            )
+            .color,
+        AppColors.blueTint,
+      );
+    });
+
+    testWidgets('without a URL, with a fallback: the stock image', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        const HomeCoverImage(url: null, fallback: HomeScreen.meditationsCover),
+      );
+
+      expect(find.byType(HomeCoverPlaceholder), findsNothing);
+      expect(
+        tester.widget<Image>(find.byType(Image)).image,
+        const AssetImage(HomeScreen.meditationsCover),
+      );
+    });
+  });
+
   group('HomeSectionCover', () {
     const statusBar = 47.0;
 
@@ -182,7 +228,6 @@ void main() {
                 child: SizedBox(
                   width: _screenWidth,
                   child: HomeSectionCover(
-                    image: HomeScreen.meditationsCover,
                     title: title,
                     subtitle: HomeText.meditationsSubtitle,
                     onSeeAll: onSeeAll,

@@ -349,11 +349,89 @@ void main() {
       ]) {
         expect(sectionCover(tester, title).imageUrl, Uri.parse(cover));
       }
-      // The diary has no featured item: always the stock image.
+      // The diary has no featured item: always its stock image.
       expect(sectionCover(tester, HomeText.diary).imageUrl, isNull);
+      expect(sectionCover(tester, HomeText.diary).image, HomeScreen.diaryCover);
     });
 
-    testWidgets('an unloadable cover falls back to the stock image', (
+    Finder inCover(String title, Finder matching) => find.descendant(
+      of: find.byWidgetPredicate(
+        (w) => w is HomeSectionCover && w.title == title,
+        skipOffstage: false,
+      ),
+      matching: matching,
+      skipOffstage: false,
+    );
+
+    const featuredSections = [
+      HomeText.meditations,
+      HomeText.tools,
+      HomeText.topics,
+      HomeText.articles,
+    ];
+
+    testWidgets('a featured item without cover_image_url shows the '
+        'placeholder, not a stock image of the section', (tester) async {
+      await pumpApp(
+        tester,
+        homeEnv({
+          getHome: homeResponse(
+            meditations: sectionJson(meditationJson(1, 'Заглавная')),
+            tools: sectionJson(toolJson(11, 'Заглавный')),
+            topics: sectionJson(topicJson(21, 'Заглавная')),
+            articles: sectionJson(articleJson(31, 'Заглавная')),
+          ),
+        }),
+      );
+
+      for (final title in featuredSections) {
+        expect(sectionCover(tester, title).imageUrl, isNull, reason: title);
+        expect(
+          inCover(title, find.byType(HomeCoverPlaceholder)),
+          findsOneWidget,
+          reason: title,
+        );
+        expect(inCover(title, find.byType(Image)), findsNothing, reason: title);
+      }
+    });
+
+    testWidgets('the diary cover is its stock image, never the placeholder', (
+      tester,
+    ) async {
+      await pumpApp(tester, homeEnv());
+
+      expect(
+        inCover(HomeText.diary, find.byType(HomeCoverPlaceholder)),
+        findsNothing,
+      );
+      expect(
+        tester
+            .widgetList<Image>(inCover(HomeText.diary, find.byType(Image)))
+            .map((i) => i.image),
+        contains(const AssetImage(HomeScreen.diaryCover)),
+      );
+    });
+
+    testWidgets('a section without a featured item shows the placeholder', (
+      tester,
+    ) async {
+      await pumpApp(
+        tester,
+        homeEnv({
+          getHome: homeResponse(
+            meditations: sectionJson(null, [meditationJson(2, 'Другая')]),
+          ),
+        }),
+      );
+
+      expect(
+        inCover(HomeText.meditations, find.byType(HomeCoverPlaceholder)),
+        findsOneWidget,
+      );
+      expect(inCover(HomeText.meditations, find.byType(Image)), findsNothing);
+    });
+
+    testWidgets('an unloadable cover falls back to the placeholder', (
       tester,
     ) async {
       // Test HTTP answers 400 to every request.
@@ -372,15 +450,23 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final images = find.descendant(
-        of: find.byWidgetPredicate(
-          (w) => w is HomeSectionCover && w.title == HomeText.meditations,
-        ),
-        matching: find.byType(Image),
+      final meditations = find.byWidgetPredicate(
+        (w) => w is HomeSectionCover && w.title == HomeText.meditations,
       );
       expect(
-        tester.widgetList<Image>(images).map((i) => i.image),
-        contains(const AssetImage(HomeScreen.meditationsCover)),
+        find.descendant(
+          of: meditations,
+          matching: find.byType(HomeCoverPlaceholder),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        tester
+            .widgetList<Image>(
+              find.descendant(of: meditations, matching: find.byType(Image)),
+            )
+            .map((i) => i.image),
+        isNot(contains(isA<AssetImage>())),
       );
     });
 
